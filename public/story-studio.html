@@ -30,11 +30,45 @@
 <div class="card"><h2>🎥 IMAGE-TO-VIDEO PROMPT</h2><pre id="videoOut">Lalabas dito ang video prompt.</pre></div>
 <script>
 function v(id){return document.getElementById(id).value.trim()||"Not specified"}
-function makePrompts(){
-let p=v('project'),part=v('part'),s=v('scene'),loc=v('location'),cast=v('cast'),act=v('action'),cam=v('camera'),dia=v('dialogue'),aud=v('audio'),con=v('continuity');
-let head=`PROJECT: ${p}\n${part}\n${s}\nFICTIONAL STORY — FICTIONAL CHARACTERS ONLY.\nVertical 9:16, 1080x1920, premium ultra-photorealistic cinematic Filipino live-action drama.\nLOCATION/TIME: ${loc}\nCAST: ${cast}\n`;
-document.getElementById('imageOut').textContent=head+`\nTEXT-TO-IMAGE PROMPT:\nCreate one coherent cinematic starting frame showing only the specified scene.\nACTION, POSITIONS, EXPRESSIONS AND EMOTION: ${act}\nCAMERA AND COMPOSITION: ${cam}. Compose the environment and characters clearly; vary framing purposefully and avoid unnecessarily distant faces.\nCHARACTER IDENTITY LOCK: Follow approved character reference sheets exactly. Preserve facial identity, age appearance, hairstyle, skin tone, body proportions and approved wardrobe. No face swapping or identity drift.\nLOCATION AND PROP CONTINUITY: ${con}\nCINEMATOGRAPHY: Natural realistic lighting, motivated key/fill/backlight, consistent color temperature, believable blocking and visual storytelling.\nFACE QUALITY: Sharp recognizable faces, natural skin texture, clear eyes; no warping, pixelation or artificial smoothing.\nNo extra characters, invented actions, subtitles, captions, text overlays, watermarks or unapproved logos. Include visible text only when explicitly required.\n`);
-document.getElementById('videoOut').textContent=head+`\nIMAGE-TO-VIDEO PROMPT — GOOGLE FLOW\nDURATION: 10 seconds maximum. The supplied image is the exact starting frame. Preserve its composition, character identities, wardrobe, location, props and lighting. Animate only the specified action: ${act}\nTIMELINE:\n00:00–00:02: Begin from the exact image; subtle natural movement only.\n00:02–00:05: Continue the specified action with motivated camera movement.\n00:05–00:08: Continue naturally; maintain eyelines, screen direction and prop positions.\n00:08–00:10: Finish the action naturally without inventing a new event.\nEXACT DIALOGUE — DO NOT ADD, REMOVE, PARAPHRASE, REPEAT OR REORDER:\n${dia}\nSOLO DIALOGUE LOCK: Only the character whose line is being spoken may speak or move their lips. Other characters remain silent. Wait until each line finishes before the next speaker. No overlapping voices, duplicated words or voice swapping. Maintain the same voice across camera cuts.\nTAGALOG NUMBER LOCK: Speak all numbers, money, ages, times, dates and quantities naturally in Tagalog words. Visual text is not spoken unless scripted.\nAUDIO/SFX LOCK: ${aud}. No invented narration, background dialogue, music or competing sound effects.\nCONTINUITY LOCK: ${con}. Follow the 180-degree rule, eyelines, screen direction, matching action, consistent wardrobe, lighting and prop positions. No teleporting props, disappearing objects or identity changes.\nCAMERA: ${cam}. Smooth motivated movement only; no random zooms or excessive shake. Keep faces sharp and recognizable.\nNo extra characters, invented actions or dialogue, subtitles, captions, overlays, watermarks or unapproved logos.\nPRIORITY: Exact dialogue and solo speaker separation; identity and continuity; specified action and blocking; face clarity; camera movement and effects.\n`
+async function makePrompts() {
+  const prompt = [
+    "Gumawa ng orihinal na Filipino drama para sa Google Flow.",
+    "Project: " + v("project"),
+    "Part/Episode: " + v("part"),
+    "Scene: " + v("scene"),
+    "Location at oras: " + v("location"),
+    "Characters: " + v("cast"),
+    "Kilos at emosyon: " + v("action"),
+    "Camera angle: " + v("camera"),
+    "Eksaktong dialogue: " + v("dialogue"),
+    "Audio at SFX: " + v("audio"),
+    "Continuity: " + v("continuity"),
+    "Gumawa ng image prompt at video prompt na hanggang 10 segundo.",
+    "Panatilihin ang character identity, wardrobe, props, location, voice at continuity.",
+    "Tagalog ang dialogue. Isulat sa salitang Tagalog ang lahat ng binibigkas na numero at halaga ng pera.",
+    "Bawat speaker ay may sariling linya. Huwag magdagdag ng dialogue.",
+    "Huwag kopyahin ang dialogue mula sa ibang kuwento."
+  ].join("\n");
+
+  document.getElementById("imageOut").textContent = "Gumagawa ng prompts...";
+  document.getElementById("videoOut").textContent = "Sandali lang...";
+
+  try {
+    const response = await fetch("/api/generate-story", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt })
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Hindi nagawa ang prompts.");
+
+    document.getElementById("imageOut").textContent = data.story;
+    document.getElementById("videoOut").textContent = data.story;
+  } catch (error) {
+    document.getElementById("imageOut").textContent = "Error: " + error.message;
+    document.getElementById("videoOut").textContent = "Subukan ulit.";
+  }
 }
 function copyText(id){let t=document.getElementById(id).textContent;navigator.clipboard.writeText(t).then(()=>alert('Nakopya na!')).catch(()=>alert('Pindutin nang matagal ang prompt at piliin ang Copy.'))}
 </script>
