@@ -1,4 +1,4 @@
-
+import { analyzeStory } from "./analyzer.js";
 import express from "express";
 import multer from "multer";
 import OpenAI, { toFile } from "openai";
@@ -34,7 +34,20 @@ app.use(express.static(path.join(__dirname, "public")));
 app.get("/api/health", (_req, res) => {
   res.json({ ok: true, apiKeyConfigured: Boolean(process.env.GROQ_API_KEY) });
 });
-
+app.post("/api/analyze", async (req, res) => {
+  try {
+    const { transcript } = req.body;
+    const analysis = await analyzeStory({
+      transcript,
+      apiKey: process.env.GROQ_API_KEY
+    });
+    res.json({ analysis });
+  } catch (err) {
+    res.status(500).json({
+      error: err.message || "Hindi nagawa ang story analysis."
+    });
+  }
+});
 app.post("/api/transcribe", upload.single("media"), async (req, res) => {
   const uploaded = req.file;
   if (!uploaded) return res.status(400).json({ error: "Please upload an audio or video file." });
