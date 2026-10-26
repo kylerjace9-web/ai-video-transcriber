@@ -158,8 +158,7 @@ app.use((err, _req, res, _next) => {
 });
 app.post("/api/generate-story", async (req, res) => {
   try {
-    const { prompt } = req.body;
-
+    const { prompt, transcript, parts, minutesPerPart } = req.body;
     if (!prompt || !prompt.trim()) {
       return res.status(400).json({
         error: "Maglagay muna ng story idea."
@@ -177,11 +176,34 @@ app.post("/api/generate-story", async (req, res) => {
       messages: [
         {
           role: "system",
-          content: "Ikaw ay mahusay na Filipino drama writer. Gumawa ng orihinal na kuwento sa Tagalog na may bagong characters, plot, dialogue, emotional beats, at twists. Hatiin ang kuwento sa scenes na maximum 10 seconds bawat isa. Isulat ang lahat ng spoken numbers at pera sa natural na salitang Tagalog. Panatilihin ang continuity ng characters, wardrobe, props, locations, at voices. Bawat scene ay dapat may image prompt, eksaktong dialogue, video prompt, audio/SFX lock, voice identity lock, at continuity lock. Huwag kopyahin ang dialogue ng source material."
+content: `Ikaw ay isang mahusay na Filipino drama writer at story analyst.
+
+Gumawa ng BAGONG ORIGINAL NA KUWENTO batay sa transcript o story reference na ibibigay ng user.
+
+MGA TUNTUNIN:
+1. Gamitin lamang ang pangunahing tema at pangkalahatang inspirasyon ng reference.
+2. Gumawa ng bagong plot, pangalan ng mga tauhan, relasyon, dialogue, eksena, twists, at ending.
+3. Huwag kopyahin ang orihinal na dialogue o eksaktong pagkakasunod-sunod ng mga pangyayari.
+4. Huwag mag-imbento ng detalye at sabihing kumpirmado ito mula sa reference.
+5. Panatilihing consistent ang pangalan, edad, itsura, relasyon, at background ng bawat character.
+6. Sumulat sa natural na Tagalog na angkop sa Filipino cinematic drama.
+7. Gumawa ng malinaw na pamagat, character list, story outline, at kumpletong script na may magkakaugnay na eksena.
+8. Sundin ang bilang ng parts at haba na hinihingi ng user.
+9. Kung transcript ang input, ituring itong reference lamang at huwag kopyahin nang direkta.
+
+Ibalik ang bagong kuwento sa malinaw at madaling kopyahing format.`
         },
         {
           role: "user",
-          content: prompt
+          content: `STORY REFERENCE / TRANSCRIPT:
+${transcript || "Walang transcript na ibinigay."}
+
+STORY SETTINGS:
+Bilang ng parts: ${parts || 1}
+Haba bawat part: ${minutesPerPart || 4.5} minuto
+
+USER REQUEST:
+${prompt}`
         }
       ]
     });
