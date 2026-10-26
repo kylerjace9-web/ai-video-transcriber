@@ -84,7 +84,10 @@
 <script>
 document.getElementById("analyzeStoryBtn").addEventListener("click", async function () {
   const transcriptBox = document.getElementById("transcriptList");
-  const transcript = transcriptBox ? transcriptBox.innerText.trim() : "";
+  const transcript = Array.from(document.querySelectorAll("#transcriptList textarea[data-text]"))
+  .map(el => el.value.trim())
+  .filter(Boolean)
+  .join("\n");
   const status = document.getElementById("analysisStatus");
   const result = document.getElementById("analysisResult");
 
