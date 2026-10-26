@@ -30,7 +30,8 @@
 
   function v(id) {
   return document.getElementById(id).value.trim() || "Not specified";
-}
+
+
 async function makePrompts() {
   const script = document.getElementById("partScript").value.trim();
   const buttons = document.getElementById("sceneButtons");
@@ -41,7 +42,7 @@ async function makePrompts() {
     return;
   }
 
-  buttons.textContent = "";
+  buttons.innerHTML = "";
   output.textContent = "Ginagawa ang scenes...";
 
   try {
@@ -49,14 +50,29 @@ async function makePrompts() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        prompt: `Hatiin ang script sa scenes na hanggang 10 segundo bawat isa. Para sa bawat scene, gumawa ng magkakahiwalay na IMAGE PROMPT, COMPLETE DIALOGUE PREVIEW, VIDEO PROMPT, SFX/AUDIO LOCK, VOICE IDENTITY LOCK, at CONTINUITY LOCK. Panatilihin ang eksaktong dialogue. Lahat ng binibigkas na numero at pera ay isulat sa salitang Tagalog. Vertical 9:16, 1080x1920. Walang subtitles, captions, o watermark.\n\nBUONG PART SCRIPT:\n${script}`
+        prompt: `Hatiin ang kuwento sa magkakahiwalay na scenes na maximum 10 segundo bawat isa. Lagyan ang bawat scene ng malinaw na heading na SCENE 1, SCENE 2, at iba pa. Para sa bawat scene, isama ang IMAGE PROMPT, COMPLETE DIALOGUE PREVIEW, VIDEO PROMPT, SFX/AUDIO LOCK, VOICE IDENTITY LOCK, at CONTINUITY LOCK. Panatilihin ang eksaktong dialogue. Isulat sa salitang Tagalog ang lahat ng binibigkas na numero at pera. Vertical 9:16, 1080x1920. Walang subtitles, captions, o watermark.\n\nBUONG PART SCRIPT:\n${script}`
       })
     });
 
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || "Hindi nagtagumpay.");
 
-    output.textContent = data.story || "Walang nabuong story.";
+    const story = data.story || "";
+    output.textContent = story;
+
+    const matches = [...story.matchAll(/SCENE\s+\d+/gi)];
+    const scenes = [...new Set(matches.map(m => m[0].toUpperCase()))];
+
+    scenes.forEach((scene, index) => {
+      const button = document.createElement("button");
+      button.textContent = scene;
+      button.onclick = () => {
+        const start = matches[index].index;
+        const end = index + 1 < matches.length ? matches[index + 1].index : story.length;
+        output.textContent = story.slice(start, end).trim();
+      };
+      buttons.appendChild(button);
+    });
   } catch (error) {
     output.textContent = "Error: " + error.message;
   }
