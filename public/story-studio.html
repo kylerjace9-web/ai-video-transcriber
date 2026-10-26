@@ -12,9 +12,14 @@
 <h1>🎬 Story Studio</h1>
 <p>Gumawa ng cinematic prompts para sa Filipino drama at Google Flow. Maximum na sampung segundo bawat scene.</p>
 <div class="card">
-
+<h2>📖 PART SCRIPT</h2>
+<label for="partScript">I-paste ang buong script ng Part:</label>
+<textarea id="partScript" rows="8" placeholder="I-paste dito ang buong Tagalog story script..."></textarea>
+<button onclick="makePrompts()">GENERATE SCENES</button>
+<div id="sceneButtons"></div>
+<div id="sceneOutput"></div>
 </div>
-<button onclick="makePrompts()">GENERATE BOTH PROMPTS</button>
+
 <button onclick="copyText('imageOut')">COPY IMAGE PROMPT</button>
 <button onclick="copyText('videoOut')">COPY VIDEO PROMPT</button>
 <div class="card"><h2>🖼️ TEXT-TO-IMAGE PROMPT</h2><pre id="imageOut">Punan ang details at pindutin ang Generate.</pre></div>
@@ -24,29 +29,37 @@
   function v(id) {
   return document.getElementById(id).value.trim() || "Not specified";
 }
-
 async function makePrompts() {
-  const imageOut = document.getElementById("imageOut");
-  const videoOut = document.getElementById("videoOut");
+  const script = document.getElementById("partScript").value.trim();
+  const buttons = document.getElementById("sceneButtons");
+  const output = document.getElementById("sceneOutput");
 
-  const prompt = `
-Gumawa ng original na Filipino drama scene.
-Project: Ang Oras at Presensya ang Tunay na Pamana
-Gumawa ng dalawang magkahiwalay na prompt:
-TEXT-TO-IMAGE PROMPT
-IMAGE-TO-VIDEO PROMPT
+  if (!script) {
+    alert("I-paste muna ang buong Part script.");
+    return;
+  }
 
-Vertical 9:16, 1080x1920, photorealistic cinematic Filipino drama.
-Video maximum 10 seconds.
-Tagalog dialogue. Isulat sa salita ang lahat ng numerong binibigkas.
-Isang speaker lang sa bawat linya. Huwag magdagdag o magpalit ng dialogue.
-Panatilihin ang mukha, damit, props, lokasyon at continuity.
-Walang subtitles, captions o watermark.
-`;
+  buttons.textContent = "";
+  output.textContent = "Ginagawa ang scenes...";
 
-  imageOut.textContent = "TEXT-TO-IMAGE PROMPT\n\n" + prompt;
-  videoOut.textContent = "IMAGE-TO-VIDEO PROMPT\n\n" + prompt;
+  try {
+    const response = await fetch("/api/generate-story", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        prompt: `Hatiin ang script sa scenes na hanggang 10 segundo bawat isa. Para sa bawat scene, gumawa ng magkakahiwalay na IMAGE PROMPT, COMPLETE DIALOGUE PREVIEW, VIDEO PROMPT, SFX/AUDIO LOCK, VOICE IDENTITY LOCK, at CONTINUITY LOCK. Panatilihin ang eksaktong dialogue. Lahat ng binibigkas na numero at pera ay isulat sa salitang Tagalog. Vertical 9:16, 1080x1920. Walang subtitles, captions, o watermark.\n\nBUONG PART SCRIPT:\n${script}`
+      })
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Hindi nagtagumpay.");
+
+    output.textContent = data.story || "Walang nabuong story.";
+  } catch (error) {
+    output.textContent = "Error: " + error.message;
+  }
 }
+
 function copyText(id){let t=document.getElementById(id).textContent;navigator.clipboard.writeText(t).then(()=>alert('Nakopya na!')).catch(()=>alert('Pindutin nang matagal ang prompt at piliin ang Copy.'))}
 </script>
 </body>
