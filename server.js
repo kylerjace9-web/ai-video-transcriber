@@ -54,11 +54,17 @@ app.post("/api/analyze", async (req, res) => {
 });
 app.post("/api/transcribe", upload.single("media"), async (req, res) => {
   const uploaded = req.file;
-  if (!uploaded) return res.status(400).json({ error: "Please upload an audio or video file." });
+  if (!uploaded) {
+    return res.status(400).json({ error: "Please upload an audio or video file." });
+  }
+
   if (!process.env.GROQ_API_KEY) {
     fs.unlink(uploaded.path, () => {});
-    return res.status(503).json({ error: "Backend is missing GROQ_API_KEY. Add it in Render Environment settings." });
+    return res.status(503).json({ error: "Backend is missing GROQ_API_KEY." });
   }
+
+  const chunks = [];
+  const tempFiles = [];
 
   try {
     const groq = new OpenAI({
@@ -66,35 +72,80 @@ app.post("/api/transcribe", upload.single("media"), async (req, res) => {
       baseURL: "https://api.groq.com/openai/v1"
     });
 
-    const result = await groq.audio.transcriptions.create({
-      file: await toFile(fs.createReadStream(uploaded.path), uploaded.originalname),
-      model: process.env.TRANSCRIPTION_MODEL || "whisper-large-v3",
-      response_format: "verbose_json",
-      timestamp_granularities: ["segment"]
+    const outputDir = path.join(__dirname, "tmp");
+    const chunkDuration = 300;
+
+    await new Promise((resolve, reject) => {
+      let command = ffmpeg(uploaded.path)
+        .noVideo()
+        .audioCodec("libmp3lame")
+        .audioBitrate("48k")
+        .audioChannels(1)
+        .audioFrequency(16000)
+        .format("segment")
+        .outputOptions([
+          "-f", "segment",
+          "-segment_time", String(chunkDuration),
+          "-reset_timestamps", "1"
+        ])
+        .on("error", reject)
+        .on("end", resolve);
+
+      const chunkPrefix = `chunk-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+const pattern = path.join(outputDir, `${chunkPrefix}-%03d.mp3`);
+      command.save(pattern);
     });
 
-    const segments = (result.segments || []).map((s, i) => ({
-      id: s.id ?? `seg-${i + 1}`,
-      start: Number(s.start || 0),
-      end: Number(s.end || 0),
-      speaker: s.speaker || "Speaker",
-      text: s.text || ""
-    }));
+    const files = fs.readdirSync(outputDir)
+  .filter(name => name.startsWith(`${chunkPrefix}-`) && name.endsWith(".mp3"))
+      .map(name => path.join(outputDir, name))
+      .sort();
+
+    tempFiles.push(...files);
+
+    if (!files.length) {
+      throw new Error("Hindi nagawa ang audio chunks.");
+    }
+
+    let allSegments = [];
+    let fullText = "";
+    let offset = 0;
+
+    for (const file of files) {
+      const result = await groq.audio.transcriptions.create({
+        file: await toFile(fs.createReadStream(file), path.basename(file)),
+        model: process.env.TRANSCRIPTION_MODEL || "whisper-large-v3",
+        response_format: "verbose_json",
+        timestamp_granularities: ["segment"]
+      });
+
+      const segments = (result.segments || []).map((s, i) => ({
+        id: `seg-${allSegments.length + i + 1}`,
+        start: Number(s.start || 0) + offset,
+        end: Number(s.end || 0) + offset,
+        speaker: s.speaker || "Speaker",
+        text: s.text || ""
+      }));
+
+      allSegments.push(...segments);
+      fullText += (result.text || segments.map(s => s.text).join(" ")) + " ";
+      offset += Number(result.duration || chunkDuration);
+    }
 
     res.json({
-      text: result.text || segments.map(s => s.text).join(" "),
-      duration: Number(result.duration || 0),
-      segments,
-      note: "Groq Whisper provides timestamps but does not reliably identify different speakers. Speaker labels may be placeholders; review them before publishing."
+      text: fullText.trim(),
+      duration: offset,
+      segments: allSegments,
+      note: "Long media is split into audio chunks before transcription."
     });
   } catch (err) {
     console.error("Transcription error:", err);
-    const status = err?.status && Number.isInteger(err.status) ? err.status : 500;
-    res.status(status).json({
-      error: err?.message || "Transcription failed. Check the Groq API key, file size, and supported file format."
+    res.status(err.status && Number.isInteger(err.status) ? err.status : 500).json({
+      error: err.message || "Transcription failed."
     });
   } finally {
     fs.unlink(uploaded.path, () => {});
+    tempFiles.forEach(file => fs.unlink(file, () => {}));
   }
 });
 
