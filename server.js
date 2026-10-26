@@ -32,8 +32,8 @@ const upload = multer({
   }
 });
 
-fs.mkdirSync(path.join(__dirname, "tmp"), { recursive: true });
-app.use(express.static(path.join(__dirname, "public")));
+fs.mkdirSync(path.join(path.dirname(fileURLToPath(import.meta.url)), "tmp"), { recursive: true });
+app.use(express.static(path.join(path.dirname(fileURLToPath(import.meta.url)), "public")));
 
 app.get("/api/health", (_req, res) => {
   res.json({ ok: true, apiKeyConfigured: Boolean(process.env.GROQ_API_KEY) });
