@@ -29,10 +29,18 @@
 <div class="card"><h2>🖼️ TEXT-TO-IMAGE PROMPT</h2><pre id="imageOut">Punan ang details at pindutin ang Generate.</pre></div>
 <div class="card"><h2>🎥 IMAGE-TO-VIDEO PROMPT</h2><pre id="videoOut">Lalabas dito ang video prompt.</pre></div>
 <script>
-function v(id){return document.getElementById(id).value.trim()||"Not specified"}
+function v(id)
+  function v(id) {
+  return document.getElementById(id).value.trim() || "Not specified";
+}
+
 async function makePrompts() {
+  const btn = document.querySelector('button[onclick="makePrompts()"]');
+  const imageOut = document.getElementById("imageOut");
+  const videoOut = document.getElementById("videoOut");
+
   const prompt = [
-    "Gumawa ng orihinal na Filipino drama para sa Google Flow.",
+    "Gumawa ng original na Filipino drama scene prompts para sa Google Flow.",
     "Project: " + v("project"),
     "Part/Episode: " + v("part"),
     "Scene: " + v("scene"),
@@ -43,31 +51,41 @@ async function makePrompts() {
     "Eksaktong dialogue: " + v("dialogue"),
     "Audio at SFX: " + v("audio"),
     "Continuity: " + v("continuity"),
-    "Gumawa ng image prompt at video prompt na hanggang 10 segundo.",
-    "Panatilihin ang character identity, wardrobe, props, location, voice at continuity.",
-    "Tagalog ang dialogue. Isulat sa salitang Tagalog ang lahat ng binibigkas na numero at halaga ng pera.",
-    "Bawat speaker ay may sariling linya. Huwag magdagdag ng dialogue.",
-    "Huwag kopyahin ang dialogue mula sa ibang kuwento."
+    "Gumawa ng dalawang magkahiwalay na prompt: TEXT-TO-IMAGE at IMAGE-TO-VIDEO.",
+    "Vertical 9:16, 1080x1920, photorealistic cinematic Filipino drama.",
+    "Video duration maximum 10 seconds. Panatilihin ang mukha, damit, props, lokasyon at lighting.",
+    "Tagalog ang dialogue. Isulat sa salitang Tagalog ang lahat ng numerong binibigkas.",
+    "Bawat speaker ay magsasalita lamang sa sariling linya. Huwag magdagdag o magbago ng dialogue.",
+    "Gawing detalyado ang camera composition, blocking, lighting, audio at continuity.",
+    "Ibalik ang dalawang prompt na may malinaw na headings."
   ].join("\n");
 
-  document.getElementById("imageOut").textContent = "Gumagawa ng prompts...";
-  document.getElementById("videoOut").textContent = "Sandali lang...";
+  btn.disabled = true;
+  imageOut.textContent = "Gumagawa ng prompts...";
+  videoOut.textContent = "Sandali lang...";
 
   try {
     const response = await fetch("/api/generate-story", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt })
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({prompt})
     });
 
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || "Hindi nagawa ang prompts.");
 
-    document.getElementById("imageOut").textContent = data.story;
-    document.getElementById("videoOut").textContent = data.story;
+    const story = data.story || "";
+    const split = story.split(/IMAGE-TO-VIDEO PROMPT/i);
+
+    imageOut.textContent = split[0].replace(/TEXT-TO-IMAGE PROMPT/i, "").trim();
+    videoOut.textContent = split.length > 1
+      ? "IMAGE-TO-VIDEO PROMPT\n" + split.slice(1).join("").trim()
+      : story;
   } catch (error) {
-    document.getElementById("imageOut").textContent = "Error: " + error.message;
-    document.getElementById("videoOut").textContent = "Subukan ulit.";
+    imageOut.textContent = "Error: " + error.message;
+    videoOut.textContent = "Pakisubukan ulit.";
+  } finally {
+    btn.disabled = false;
   }
 }
 function copyText(id){let t=document.getElementById(id).textContent;navigator.clipboard.writeText(t).then(()=>alert('Nakopya na!')).catch(()=>alert('Pindutin nang matagal ang prompt at piliin ang Copy.'))}
