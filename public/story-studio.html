@@ -133,7 +133,15 @@ async function generateVideoPrompt() {
   }
 }
   
-function copyText(id){let t=document.getElementById(id).textContent;navigator.clipboard.writeText(t).then(()=>alert('Nakopya na!')).catch(()=>alert('Pindutin nang matagal ang prompt at piliin ang Copy.'))}
+  async function copyText(id) {
+  const text = document.getElementById(id).textContent;
+  try {
+    await navigator.clipboard.writeText(text);
+    alert("Nakopya na!");
+  } catch (error) {
+    alert("Pindutin nang matagal ang text at piliin ang Copy.");
+  }
+  }
 </script>
 </body>
                                                                                                                                                                      </html>
