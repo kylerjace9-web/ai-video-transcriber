@@ -1,7 +1,7 @@
 
 import express from "express";
 import multer from "multer";
-import OpenAI from "openai";
+import OpenAI, { toFile } from "openai";
 import dotenv from "dotenv";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -50,7 +50,7 @@ app.post("/api/transcribe", upload.single("media"), async (req, res) => {
     });
 
     const result = await groq.audio.transcriptions.create({
-      file: fs.createReadStream(uploaded.path),
+      file: await toFile(fs.createReadStream(uploaded.path), uploaded.originalname),
       model: process.env.TRANSCRIPTION_MODEL || "whisper-large-v3",
       response_format: "verbose_json",
       timestamp_granularities: ["segment"]
