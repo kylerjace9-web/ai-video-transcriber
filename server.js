@@ -1,3 +1,4 @@
+
 import express from "express";
 import multer from "multer";
 import OpenAI from "openai";
@@ -7,10 +8,12 @@ import { fileURLToPath } from "node:url";
 import fs from "node:fs";
 
 dotenv.config();
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = process.env.PORT || 3000;
 const MAX_MB = Number(process.env.MAX_UPLOAD_MB || 100);
+
 const upload = multer({
   dest: path.join(__dirname, "tmp"),
   limits: { fileSize: MAX_MB * 1024 * 1024 },
@@ -18,53 +21,61 @@ const upload = multer({
     const allowed = new Set([
       "video/mp4", "video/quicktime", "video/webm",
       "audio/mpeg", "audio/mp4", "audio/wav", "audio/x-wav",
-      "audio/webm", "audio/ogg", "audio/mp4"
+      "audio/webm", "audio/ogg", "audio/mpga", "audio/flac",
+      "audio/m4a", "audio/x-m4a"
     ]);
     cb(allowed.has(file.mimetype) ? null : new Error("Unsupported file type."), allowed.has(file.mimetype));
   }
 });
-fs.mkdirSync(path.join(__dirname, "tmp"), { recursive: true });
 
+fs.mkdirSync(path.join(__dirname, "tmp"), { recursive: true });
 app.use(express.static(path.join(__dirname, "public")));
-app.get("/api/health", (_req, res) => res.json({ ok: true, apiKeyConfigured: Boolean(process.env.OPENAI_API_KEY) }));
+
+app.get("/api/health", (_req, res) => {
+  res.json({ ok: true, apiKeyConfigured: Boolean(process.env.GROQ_API_KEY) });
+});
 
 app.post("/api/transcribe", upload.single("media"), async (req, res) => {
   const uploaded = req.file;
   if (!uploaded) return res.status(400).json({ error: "Please upload an audio or video file." });
-  if (!process.env.OPENAI_API_KEY) {
+  if (!process.env.GROQ_API_KEY) {
     fs.unlink(uploaded.path, () => {});
-    return res.status(503).json({ error: "Backend is missing OPENAI_API_KEY. Add it to .env and restart the server." });
+    return res.status(503).json({ error: "Backend is missing GROQ_API_KEY. Add it in Render Environment settings." });
   }
 
   try {
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-    // The audio transcription endpoint accepts audio/video container formats such as MP4.
-    // The diarization model provides segment start/end timestamps and speaker labels.
-    // For larger videos, extract/compress audio with FFmpeg first and split into API-sized chunks.
-    const result = await openai.audio.transcriptions.create({
-      file: fs.createReadStream(uploaded.path, { encoding: null }),
-      model: process.env.TRANSCRIPTION_MODEL || "gpt-4o-transcribe-diarize",
-      response_format: "diarized_json",
-      chunking_strategy: "auto"
+    const groq = new OpenAI({
+      apiKey: process.env.GROQ_API_KEY,
+      baseURL: "https://api.groq.com/openai/v1"
+    });
+
+    const result = await groq.audio.transcriptions.create({
+      file: fs.createReadStream(uploaded.path),
+      model: process.env.TRANSCRIPTION_MODEL || "whisper-large-v3",
+      response_format: "verbose_json",
+      timestamp_granularities: ["segment"]
     });
 
     const segments = (result.segments || []).map((s, i) => ({
-      id: s.id || `seg-${i + 1}`,
+      id: s.id ?? `seg-${i + 1}`,
       start: Number(s.start || 0),
       end: Number(s.end || 0),
       speaker: s.speaker || "Speaker",
       text: s.text || ""
     }));
+
     res.json({
       text: result.text || segments.map(s => s.text).join(" "),
       duration: Number(result.duration || 0),
       segments,
-      note: "Speaker labels are AI estimates. Review names and timestamps before publishing."
+      note: "Groq Whisper provides timestamps but does not reliably identify different speakers. Speaker labels may be placeholders; review them before publishing."
     });
   } catch (err) {
-    console.error("Transcription error:", err?.message || err);
-    const status = err?.status || 500;
-    res.status(status).json({ error: err?.message || "Transcription failed. Check the API key, file size, and supported format." });
+    console.error("Transcription error:", err);
+    const status = err?.status && Number.isInteger(err.status) ? err.status : 500;
+    res.status(status).json({
+      error: err?.message || "Transcription failed. Check the Groq API key, file size, and supported file format."
+    });
   } finally {
     fs.unlink(uploaded.path, () => {});
   }
@@ -72,9 +83,9 @@ app.post("/api/transcribe", upload.single("media"), async (req, res) => {
 
 app.use((err, _req, res, _next) => {
   if (err instanceof multer.MulterError && err.code === "LIMIT_FILE_SIZE") {
-    return res.status(413).json({ error: `File is too large. Maximum upload size is ${MAX_MB} MB in this starter project.` });
+    return res.status(413).json({ error: `File is too large. Maximum upload size is ${MAX_MB} MB.` });
   }
   res.status(400).json({ error: err?.message || "Upload error." });
 });
 
-app.listen(PORT, () => console.log(`AI Video Transcriber running at http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`AI Video Transcriber running on port ${PORT}`));
