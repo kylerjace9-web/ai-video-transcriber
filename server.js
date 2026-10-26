@@ -75,7 +75,7 @@ app.post("/api/transcribe", upload.single("media"), async (req, res) => {
 
     const outputDir = path.join(__dirname, "tmp");
     const chunkDuration = 300;
-
+const chunkPrefix = `chunk-${Date.now()}-${Math.random().toString(36).slice(2)}`;
     await new Promise((resolve, reject) => {
       let command = ffmpeg(uploaded.path)
         .noVideo()
@@ -92,7 +92,7 @@ app.post("/api/transcribe", upload.single("media"), async (req, res) => {
         .on("error", reject)
         .on("end", resolve);
 
-      const chunkPrefix = `chunk-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      
 const pattern = path.join(outputDir, `${chunkPrefix}-%03d.mp3`);
       command.save(pattern);
     });
