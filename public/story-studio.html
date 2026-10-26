@@ -16,6 +16,8 @@
 <label for="partScript">I-paste ang buong script ng Part:</label>
 <textarea id="partScript" rows="8" placeholder="I-paste dito ang buong Tagalog story script..."></textarea>
 <button onclick="makePrompts()">GENERATE SCENES</button>
+<button onclick="generateImagePrompt()">GENERATE IMAGE PROMPT</button>
+<button onclick="generateVideoPrompt()">GENERATE VIDEO PROMPT</button>
 <div id="sceneButtons"></div>
 <div id="sceneOutput"></div>
 </div>
@@ -59,7 +61,19 @@ async function makePrompts() {
     output.textContent = "Error: " + error.message;
   }
 }
+async function generateImagePrompt() {
+  await makePrompts();
+  document.getElementById("imageOut").textContent =
+    "Gumawa ng image prompt mula sa buong Part Script:\n\n" +
+    document.getElementById("partScript").value.trim();
+}
 
+async function generateVideoPrompt() {
+  await makePrompts();
+  document.getElementById("videoOut").textContent =
+    "Gumawa ng image-to-video prompt mula sa buong Part Script:\n\n" +
+    document.getElementById("partScript").value.trim();
+}
 function copyText(id){let t=document.getElementById(id).textContent;navigator.clipboard.writeText(t).then(()=>alert('Nakopya na!')).catch(()=>alert('Pindutin nang matagal ang prompt at piliin ang Copy.'))}
 </script>
 </body>
