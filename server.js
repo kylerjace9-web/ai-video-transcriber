@@ -5,7 +5,9 @@ import OpenAI, { toFile } from "openai";
 import dotenv from "dotenv";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import fs from "node:fs";
+import ffmpeg from "fluent-ffmpeg";
+import ffmpegPath from "@ffmpeg-installer/ffmpeg";
+ffmpeg.setFfmpegPath(ffmpegPath.path);
 
 dotenv.config();
 
