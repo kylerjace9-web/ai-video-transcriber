@@ -50,7 +50,10 @@ async function makePrompts() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-            prompt: `Hatiin ang script sa scenes na maximum 10 segundo bawat isa. Ibalik ang resulta bilang SCENE 1, SCENE 2, SCENE 3.`
+        prompt: `Hatiin ang buong script sa magkakahiwalay na eksena. Maximum 10 segundo bawat eksena. Panatilihin ang eksaktong dialogue. Lagyan ng heading na SCENE 1, SCENE 2, SCENE 3, at iba pa.
+
+BUONG SCRIPT:
+${script}`
       })
     });
 
@@ -58,31 +61,51 @@ async function makePrompts() {
     if (!response.ok) throw new Error(data.error || "Hindi nagtagumpay.");
 
     const story = data.story || "";
-    output.textContent = story;
-
     const matches = [...story.matchAll(/SCENE\s+\d+/gi)];
-    const scenes = [...new Set(matches.map(m => m[0].toUpperCase()))];
 
-    scenes.forEach((scene, index) => {
+    if (!matches.length) {
+      output.textContent = story;
+      return;
+    }
+
+    const scenes = matches.map((match, index) => ({
+      name: match[0].toUpperCase(),
+      text: story.slice(
+        match.index,
+        index + 1 < matches.length
+          ? matches[index + 1].index
+          : story.length
+      ).trim()
+    }));
+
+    scenes.forEach((item) => {
       const button = document.createElement("button");
-      button.textContent = scene;
+      button.type = "button";
+      button.textContent = item.name;
+
       button.onclick = () => {
-        const start = matches[index].index;
-        const end = index + 1 < matches.length ? matches[index + 1].index : story.length;
-        output.textContent = story.slice(start, end).trim();
+        output.textContent = item.text;
+        document.getElementById("imageOut").textContent =
+          "Napili ang " + item.name + ". Pindutin ang GENERATE IMAGE PROMPT.";
+        document.getElementById("videoOut").textContent =
+          "Napili ang " + item.name + ". Pindutin ang GENERATE VIDEO PROMPT.";
       };
+
       buttons.appendChild(button);
     });
+
+    output.textContent = scenes[0].text;
   } catch (error) {
     output.textContent = "Error: " + error.message;
   }
 }
-async function generateImagePrompt() {
-  const script = document.getElementById("partScript").value.trim();
-  const output = document.getElementById("imageOut");
 
-  if (!script) {
-    alert("I-paste muna ang buong Part script.");
+async function generateImagePrompt() {
+  const output = document.getElementById("imageOut");
+  const scene = document.getElementById("sceneOutput").textContent.trim();
+
+  if (!scene || scene === "Ginagawa ang scenes...") {
+    alert("Pumili muna ng Scene button.");
     return;
   }
 
@@ -93,7 +116,10 @@ async function generateImagePrompt() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        prompt: `Gumawa lamang ng detalyadong TEXT-TO-IMAGE PROMPT para sa unang eksenang angkop sa script. Ultra-photorealistic Filipino drama, vertical 9:16, 1080x1920. Panatilihin ang character, wardrobe, props at location continuity. Walang subtitles, captions o watermark. Script:\n${script}`
+        prompt: `Gumawa ng detalyadong TEXT-TO-IMAGE PROMPT para lamang sa napiling eksena. Vertical 9:16, 1080x1920, ultra-photorealistic cinematic Filipino drama. Panatilihin ang character identity, damit, props at location. Walang subtitles, captions o watermark.
+
+NAPILING EKSENA:
+${scene}`
       })
     });
 
@@ -104,15 +130,15 @@ async function generateImagePrompt() {
     output.textContent = "Error: " + error.message;
   }
 }
-  
-async function generateVideoPrompt() {
-  const script = document.getElementById("partScript").value.trim();
-  const output = document.getElementById("videoOut");
 
-  if (!script) {
-    alert("I-paste muna ang buong Part script.");
-    return;
-  }
+async function generateVideoPrompt() {
+  const output = document.getElementById("videoOut");
+const scene = document.getElementById("sceneOutput").textContent.trim();
+
+if (!scene || scene === "Ginagawa ang scenes...") {
+  alert("Pumili muna ng Scene button.");
+  return;
+}
 
   output.textContent = "Generating AI Video Prompt...";
 
@@ -121,7 +147,10 @@ async function generateVideoPrompt() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        prompt: `Gumawa lamang ng detalyadong IMAGE-TO-VIDEO PROMPT para sa unang eksenang angkop sa script. Maximum 10 seconds, vertical 9:16. Isama ang camera movement, blocking, eksaktong Tagalog dialogue, audio/SFX, voice identity, at continuity lock. Isang speaker lamang sa bawat linya. Huwag baguhin o dagdagan ang dialogue. Walang subtitles, captions, o watermark.\n\nSCRIPT:\n${script}`
+          prompt: `Gumawa ng detalyadong IMAGE-TO-VIDEO PROMPT para sa napiling eksena lamang. Maximum 10 seconds, vertical 9:16, 1080x1920. Isama ang camera movement, blocking, eksaktong Tagalog dialogue, audio/SFX, voice identity at continuity lock. Isang speaker lamang sa bawat linya. Huwag baguhin o dagdagan ang dialogue. Walang subtitles, captions o watermark.
+
+NAPILING EKSENA:
+${scene}`
       })
     });
 
