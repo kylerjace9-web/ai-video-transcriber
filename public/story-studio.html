@@ -50,7 +50,7 @@ async function makePrompts() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        prompt: `Hatiin ang kuwento sa magkakahiwalay na scenes na maximum 10 segundo bawat isa. Lagyan ang bawat scene ng malinaw na heading na SCENE 1, SCENE 2, at iba pa. Para sa bawat scene, isama ang IMAGE PROMPT, COMPLETE DIALOGUE PREVIEW, VIDEO PROMPT, SFX/AUDIO LOCK, VOICE IDENTITY LOCK, at CONTINUITY LOCK. Panatilihin ang eksaktong dialogue. Isulat sa salitang Tagalog ang lahat ng binibigkas na numero at pera. Vertical 9:16, 1080x1920. Walang subtitles, captions, o watermark.\n\nBUONG PART SCRIPT:\n${script}`
+            prompt: `Hatiin ang script sa scenes na maximum 10 segundo bawat isa. Ibalik ang resulta bilang SCENE 1, SCENE 2, SCENE 3.`
       })
     });
 
