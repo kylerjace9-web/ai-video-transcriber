@@ -102,5 +102,43 @@ app.use((err, _req, res, _next) => {
   }
   res.status(400).json({ error: err?.message || "Upload error." });
 });
+app.post("/api/generate-story", async (req, res) => {
+  try {
+    const { prompt } = req.body;
 
+    if (!prompt || !prompt.trim()) {
+      return res.status(400).json({
+        error: "Maglagay muna ng story idea."
+      });
+    }
+
+    const groq = new OpenAI({
+      apiKey: process.env.GROQ_API_KEY,
+      baseURL: "https://api.groq.com/openai/v1"
+    });
+
+    const response = await groq.chat.completions.create({
+      model: "openai/gpt-oss-120b",
+      temperature: 0.7,
+      messages: [
+        {
+          role: "system",
+          content: "Ikaw ay mahusay na Filipino drama writer. Gumawa ng orihinal na kuwento sa Tagalog na may bagong characters, plot, dialogue, emotional beats, at twists. Hatiin ang kuwento sa scenes na maximum 10 seconds bawat isa. Isulat ang lahat ng spoken numbers at pera sa natural na salitang Tagalog. Panatilihin ang continuity ng characters, wardrobe, props, locations, at voices. Bawat scene ay dapat may image prompt, eksaktong dialogue, video prompt, audio/SFX lock, voice identity lock, at continuity lock. Huwag kopyahin ang dialogue ng source material."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ]
+    });
+
+    res.json({
+      story: response.choices[0]?.message?.content || "Walang story na nabuo."
+    });
+  } catch (err) {
+    res.status(500).json({
+      error: err.message || "Hindi nakagawa ng story."
+    });
+  }
+});
 app.listen(PORT, () => console.log(`AI Video Transcriber running on port ${PORT}`));
