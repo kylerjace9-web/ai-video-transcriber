@@ -11,6 +11,8 @@ dotenv.config();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
+
+app.use(express.json());
 const PORT = process.env.PORT || 3000;
 const MAX_MB = Number(process.env.MAX_UPLOAD_MB || 100);
 
