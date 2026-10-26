@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#10141d">
+<title>AI Video Transcriber</title>
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand-mark">◉</div>
+  <div class="brand-copy"><strong>FrameScript</strong><span>AI VIDEO TRANSCRIBER</span></div>
+  <span class="status"><i></i> LOCAL WORKSPACE</span>
+</header>
+<main class="shell">
+  <section class="intro">
+    <div class="eyebrow">TRANSCRIBE · TIMECODE · EXPORT</div>
+    <h1>Every word.<br><em>Right on time.</em></h1>
+    <p>Turn your video into an editable transcript, subtitles, and a scene-by-scene dialogue breakdown.</p>
+  </section>
+
+  <section class="upload-card" id="dropzone">
+    <input id="fileInput" type="file" accept="video/mp4,video/quicktime,video/webm,audio/mpeg,audio/mp4,audio/wav,audio/webm,audio/ogg,.mp4,.mov,.webm,.mp3,.m4a,.wav" hidden>
+    <div class="upload-icon">↑</div>
+    <h2>Drop your video or audio here</h2>
+    <p>MP4, MOV, WEBM, MP3, M4A, WAV · Keep API upload limits in mind</p>
+    <button class="primary" id="chooseBtn">Choose a file</button>
+    <div class="file-info" id="fileInfo">No file selected</div>
+    <div class="progress-wrap" id="progressWrap" hidden><div class="progress"><span id="progressBar"></span></div><small id="progressText">Preparing upload…</small></div>
+    <button class="primary transcribe" id="transcribeBtn" disabled>Transcribe media <span>↗</span></button>
+    <p class="error" id="errorMsg" role="alert"></p>
+  </section>
+
+  <section class="workspace" id="workspace" hidden>
+    <div class="media-panel panel">
+      <div class="panel-heading"><div><span class="kicker">PREVIEW</span><h2>Your media</h2></div><span class="duration" id="durationLabel">00:00</span></div>
+      <video id="videoPlayer" controls playsinline></video>
+      <audio id="audioPlayer" controls hidden></audio>
+      <div class="media-meta"><span id="mediaName">—</span><span id="mediaSize">—</span></div>
+    </div>
+    <div class="results panel">
+      <div class="panel-heading result-heading"><div><span class="kicker">RESULTS WORKSPACE</span><h2>Transcript & exports</h2></div><button class="ghost" id="newFileBtn">+ New file</button></div>
+      <div class="tabs" role="tablist">
+        <button class="tab active" data-tab="transcript">Transcript <b id="lineCount">0</b></button>
+        <button class="tab" data-tab="subtitles">Subtitles</button>
+        <button class="tab" data-tab="scenes">Scenes <b id="sceneCount">0</b></button>
+      </div>
+      <div class="tab-content" id="transcriptTab">
+        <div class="toolbar"><input id="searchInput" placeholder="Search dialogue…" aria-label="Search transcript"><button class="ghost" id="exportTxt">Export TXT ↓</button></div>
+        <div id="transcriptList" class="transcript-list"></div>
+      </div>
+      <div class="tab-content" id="subtitlesTab" hidden>
+        <p class="helper">Download subtitle files with timestamps. Review timing and wording before use.</p>
+        <div class="export-grid"><button class="export-card" id="exportSrt"><strong>SRT</strong><span>Most video editors</span><b>Download ↓</b></button><button class="export-card" id="exportVtt"><strong>VTT</strong><span>Web video players</span><b>Download ↓</b></button></div>
+        <pre id="subtitlePreview"></pre>
+      </div>
+      <div class="tab-content" id="scenesTab" hidden>
+        <p class="helper">Scene groups are estimated from pauses between dialogue segments, not visual scene-cut detection.</p>
+        <div id="sceneList" class="scene-list"></div>
+      </div>
+    </div>
+  </section>
+  <footer><span>FRAMESCRIPT · STARTER BUILD</span><span>Keep your API key private.</span></footer>
+</main>
+<script src="/app.js"></script>
+</body>
+</html>
