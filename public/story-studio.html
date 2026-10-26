@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Story Studio</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#101827;color:#f1f5f9;font:16px Arial,sans-serif;padding:16px}h1{font-size:25px}p{color:#cbd5e1}.card{background:#1e293b;padding:14px;border-radius:12px;margin:12px 0}label{display:block;margin:12px 0 6px}input,textarea,select{width:100%;padding:12px;border-radius:8px;border:1px solid #475569;background:#0f172a;color:white;font:inherit}textarea{min-height:90px}button{padding:12px;border:0;border-radius:8px;background:#38bdf8;color:#082f49;font-weight:bold;margin:6px 4px 6px 0}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#0b1220;padding:12px;border-radius:8px}
+</style>
+</head>
+<body>
+<h1>🎬 Story Studio</h1>
+<p>Gumawa ng cinematic prompts para sa Filipino drama at Google Flow. Maximum na sampung segundo bawat scene.</p>
+<div class="card">
+<label>Project Title</label><input id="project" placeholder="Hal. Ang Oras at Presensya">
+<label>Part / Episode</label><input id="part" placeholder="Part 1: Malamig na Lugaw">
+<label>Scene Number at Title</label><input id="scene" placeholder="Scene 1 — Kusina">
+<label>Location at oras</label><input id="location" placeholder="Kusina, gabi">
+<label>Mga character na makikita</label><textarea id="cast" placeholder="Pangalan at itsura ayon sa approved reference sheets"></textarea>
+<label>Eksaktong kilos at emosyon</label><textarea id="action" placeholder="Ilarawan kung ano lang ang gagawin sa scene"></textarea>
+<label>Camera angle</label><select id="camera"><option>Medium cinematic shot</option><option>Wide establishing shot</option><option>Over-the-shoulder shot</option><option>Side angle</option><option>Reaction shot</option><option>Close-up ng prop</option><option>Three-quarter angle</option></select>
+<label>Eksaktong dialogue, bawat speaker sa sariling linya</label><textarea id="dialogue" placeholder="RAMON: ...&#10;LENA: ..."></textarea>
+<label>Audio at SFX</label><textarea id="audio" placeholder="Dialogue at mga SFX lang na nakasaad"></textarea>
+<label>Continuity notes</label><textarea id="continuity" placeholder="Damit, props, posisyon, ilaw, mukha at lokasyon"></textarea>
+</div>
+<button onclick="makePrompts()">GENERATE BOTH PROMPTS</button>
+<button onclick="copyText('imageOut')">COPY IMAGE PROMPT</button>
+<button onclick="copyText('videoOut')">COPY VIDEO PROMPT</button>
+<div class="card"><h2>🖼️ TEXT-TO-IMAGE PROMPT</h2><pre id="imageOut">Punan ang details at pindutin ang Generate.</pre></div>
+<div class="card"><h2>🎥 IMAGE-TO-VIDEO PROMPT</h2><pre id="videoOut">Lalabas dito ang video prompt.</pre></div>
+<script>
+function v(id){return document.getElementById(id).value.trim()||"Not specified"}
+function makePrompts(){
+let p=v('project'),part=v('part'),s=v('scene'),loc=v('location'),cast=v('cast'),act=v('action'),cam=v('camera'),dia=v('dialogue'),aud=v('audio'),con=v('continuity');
+let head=`PROJECT: ${p}\n${part}\n${s}\nFICTIONAL STORY — FICTIONAL CHARACTERS ONLY.\nVertical 9:16, 1080x1920, premium ultra-photorealistic cinematic Filipino live-action drama.\nLOCATION/TIME: ${loc}\nCAST: ${cast}\n`;
+document.getElementById('imageOut').textContent=head+`\nTEXT-TO-IMAGE PROMPT:\nCreate one coherent cinematic starting frame showing only the specified scene.\nACTION, POSITIONS, EXPRESSIONS AND EMOTION: ${act}\nCAMERA AND COMPOSITION: ${cam}. Compose the environment and characters clearly; vary framing purposefully and avoid unnecessarily distant faces.\nCHARACTER IDENTITY LOCK: Follow approved character reference sheets exactly. Preserve facial identity, age appearance, hairstyle, skin tone, body proportions and approved wardrobe. No face swapping or identity drift.\nLOCATION AND PROP CONTINUITY: ${con}\nCINEMATOGRAPHY: Natural realistic lighting, motivated key/fill/backlight, consistent color temperature, believable blocking and visual storytelling.\nFACE QUALITY: Sharp recognizable faces, natural skin texture, clear eyes; no warping, pixelation or artificial smoothing.\nNo extra characters, invented actions, subtitles, captions, text overlays, watermarks or unapproved logos. Include visible text only when explicitly required.\n`);
+document.getElementById('videoOut').textContent=head+`\nIMAGE-TO-VIDEO PROMPT — GOOGLE FLOW\nDURATION: 10 seconds maximum. The supplied image is the exact starting frame. Preserve its composition, character identities, wardrobe, location, props and lighting. Animate only the specified action: ${act}\nTIMELINE:\n00:00–00:02: Begin from the exact image; subtle natural movement only.\n00:02–00:05: Continue the specified action with motivated camera movement.\n00:05–00:08: Continue naturally; maintain eyelines, screen direction and prop positions.\n00:08–00:10: Finish the action naturally without inventing a new event.\nEXACT DIALOGUE — DO NOT ADD, REMOVE, PARAPHRASE, REPEAT OR REORDER:\n${dia}\nSOLO DIALOGUE LOCK: Only the character whose line is being spoken may speak or move their lips. Other characters remain silent. Wait until each line finishes before the next speaker. No overlapping voices, duplicated words or voice swapping. Maintain the same voice across camera cuts.\nTAGALOG NUMBER LOCK: Speak all numbers, money, ages, times, dates and quantities naturally in Tagalog words. Visual text is not spoken unless scripted.\nAUDIO/SFX LOCK: ${aud}. No invented narration, background dialogue, music or competing sound effects.\nCONTINUITY LOCK: ${con}. Follow the 180-degree rule, eyelines, screen direction, matching action, consistent wardrobe, lighting and prop positions. No teleporting props, disappearing objects or identity changes.\nCAMERA: ${cam}. Smooth motivated movement only; no random zooms or excessive shake. Keep faces sharp and recognizable.\nNo extra characters, invented actions or dialogue, subtitles, captions, overlays, watermarks or unapproved logos.\nPRIORITY: Exact dialogue and solo speaker separation; identity and continuity; specified action and blocking; face clarity; camera movement and effects.\n`
+}
+function copyText(id){let t=document.getElementById(id).textContent;navigator.clipboard.writeText(t).then(()=>alert('Nakopya na!')).catch(()=>alert('Pindutin nang matagal ang prompt at piliin ang Copy.'))}
+</script>
+</body>
+                                                                                                                                                                     </html>
+                                                                                                                                                                     
