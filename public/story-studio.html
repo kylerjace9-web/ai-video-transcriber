@@ -26,58 +26,26 @@
 }
 
 async function makePrompts() {
-  const btn = document.querySelector('button[onclick="makePrompts()"]');
   const imageOut = document.getElementById("imageOut");
   const videoOut = document.getElementById("videoOut");
 
-  const prompt = [
-    "Gumawa ng original na Filipino drama scene prompts para sa Google Flow.",
-    "Project: " + v("project"),
-    "Part/Episode: " + v("part"),
-    "Scene: " + v("scene"),
-    "Location at oras: " + v("location"),
-    "Characters: " + v("cast"),
-    "Kilos at emosyon: " + v("action"),
-    "Camera angle: " + v("camera"),
-    "Eksaktong dialogue: " + v("dialogue"),
-    "Audio at SFX: " + v("audio"),
-    "Continuity: " + v("continuity"),
-    "Gumawa ng dalawang magkahiwalay na prompt: TEXT-TO-IMAGE at IMAGE-TO-VIDEO.",
-    "Vertical 9:16, 1080x1920, photorealistic cinematic Filipino drama.",
-    "Video duration maximum 10 seconds. Panatilihin ang mukha, damit, props, lokasyon at lighting.",
-    "Tagalog ang dialogue. Isulat sa salitang Tagalog ang lahat ng numerong binibigkas.",
-    "Bawat speaker ay magsasalita lamang sa sariling linya. Huwag magdagdag o magbago ng dialogue.",
-    "Gawing detalyado ang camera composition, blocking, lighting, audio at continuity.",
-    "Ibalik ang dalawang prompt na may malinaw na headings."
-  ].join("\n");
+  const prompt = `
+Gumawa ng original na Filipino drama scene.
+Project: Ang Oras at Presensya ang Tunay na Pamana
+Gumawa ng dalawang magkahiwalay na prompt:
+TEXT-TO-IMAGE PROMPT
+IMAGE-TO-VIDEO PROMPT
 
-  btn.disabled = true;
-  imageOut.textContent = "Gumagawa ng prompts...";
-  videoOut.textContent = "Sandali lang...";
+Vertical 9:16, 1080x1920, photorealistic cinematic Filipino drama.
+Video maximum 10 seconds.
+Tagalog dialogue. Isulat sa salita ang lahat ng numerong binibigkas.
+Isang speaker lang sa bawat linya. Huwag magdagdag o magpalit ng dialogue.
+Panatilihin ang mukha, damit, props, lokasyon at continuity.
+Walang subtitles, captions o watermark.
+`;
 
-  try {
-    const response = await fetch("/api/generate-story", {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({prompt})
-    });
-
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || "Hindi nagawa ang prompts.");
-
-    const story = data.story || "";
-    const split = story.split(/IMAGE-TO-VIDEO PROMPT/i);
-
-    imageOut.textContent = split[0].replace(/TEXT-TO-IMAGE PROMPT/i, "").trim();
-    videoOut.textContent = split.length > 1
-      ? "IMAGE-TO-VIDEO PROMPT\n" + split.slice(1).join("").trim()
-      : story;
-  } catch (error) {
-    imageOut.textContent = "Error: " + error.message;
-    videoOut.textContent = "Pakisubukan ulit.";
-  } finally {
-    btn.disabled = false;
-  }
+  imageOut.textContent = "TEXT-TO-IMAGE PROMPT\n\n" + prompt;
+  videoOut.textContent = "IMAGE-TO-VIDEO PROMPT\n\n" + prompt;
 }
 function copyText(id){let t=document.getElementById(id).textContent;navigator.clipboard.writeText(t).then(()=>alert('Nakopya na!')).catch(()=>alert('Pindutin nang matagal ang prompt at piliin ang Copy.'))}
 </script>
