@@ -70,5 +70,52 @@
     🎬 OPEN STORY STUDIO
   </a>
 </div>
+  
+<section style="max-width:800px;margin:20px auto;padding:16px;background:#f3f4f6;border-radius:12px;color:#111">
+  <h2>🔎 Analyze Story</h2>
+  <p>Transcribe muna ang video, pagkatapos suriin ang kuwento.</p>
+  <button id="analyzeStoryBtn" style="padding:12px 18px;background:#1769ff;color:white;border:0;border-radius:8px;font-weight:bold">
+    Analyze Story
+  </button>
+  <p id="analysisStatus" role="status"></p>
+  <pre id="analysisResult" style="white-space:pre-wrap;overflow-wrap:anywhere;font-family:inherit"></pre>
+</section>
+
+<script>
+document.getElementById("analyzeStoryBtn").addEventListener("click", async function () {
+  const transcriptBox = document.getElementById("transcriptList");
+  const transcript = transcriptBox ? transcriptBox.innerText.trim() : "";
+  const status = document.getElementById("analysisStatus");
+  const result = document.getElementById("analysisResult");
+
+  if (!transcript) {
+    status.textContent = "Mag-upload at mag-transcribe muna ng video.";
+    return;
+  }
+
+  this.disabled = true;
+  status.textContent = "Sinusuri ang kuwento... Maghintay muna.";
+  result.textContent = "";
+
+  try {
+    const response = await fetch("/api/analyze", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ transcript })
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Hindi nagtagumpay ang analysis.");
+
+    result.textContent = data.analysis || "Walang analysis na natanggap.";
+    status.textContent = "Tapos na ang pagsusuri!";
+  } catch (error) {
+    status.textContent = "Nagkaroon ng error: " + error.message;
+  } finally {
+    this.disabled = false;
+  }
+});
+</script>
+  
 </body>
 </html>
