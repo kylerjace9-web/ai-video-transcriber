@@ -62,18 +62,61 @@ async function makePrompts() {
   }
 }
 async function generateImagePrompt() {
-  await makePrompts();
-  document.getElementById("imageOut").textContent =
-    "Gumawa ng image prompt mula sa buong Part Script:\n\n" +
-    document.getElementById("partScript").value.trim();
-}
+  const script = document.getElementById("partScript").value.trim();
+  const output = document.getElementById("imageOut");
 
-async function generateVideoPrompt() {
-  await makePrompts();
-  document.getElementById("videoOut").textContent =
-    "Gumawa ng image-to-video prompt mula sa buong Part Script:\n\n" +
-    document.getElementById("partScript").value.trim();
+  if (!script) {
+    alert("I-paste muna ang buong Part script.");
+    return;
+  }
+
+  output.textContent = "Generating AI Image Prompt...";
+
+  try {
+    const response = await fetch("/api/generate-story", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        prompt: `Gumawa lamang ng detalyadong TEXT-TO-IMAGE PROMPT para sa unang eksenang angkop sa script. Ultra-photorealistic Filipino drama, vertical 9:16, 1080x1920. Panatilihin ang character, wardrobe, props at location continuity. Walang subtitles, captions o watermark. Script:\n${script}`
+      })
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "AI generation failed.");
+    output.textContent = data.story || "Walang prompt na nabuo.";
+  } catch (error) {
+    output.textContent = "Error: " + error.message;
+  }
 }
+  
+async function generateVideoPrompt() {
+  const script = document.getElementById("partScript").value.trim();
+  const output = document.getElementById("videoOut");
+
+  if (!script) {
+    alert("I-paste muna ang buong Part script.");
+    return;
+  }
+
+  output.textContent = "Generating AI Video Prompt...";
+
+  try {
+    const response = await fetch("/api/generate-story", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        prompt: `Gumawa lamang ng detalyadong IMAGE-TO-VIDEO PROMPT para sa unang eksenang angkop sa script. Maximum 10 seconds, vertical 9:16. Isama ang camera movement, blocking, eksaktong Tagalog dialogue, audio/SFX, voice identity, at continuity lock. Isang speaker lamang sa bawat linya. Huwag baguhin o dagdagan ang dialogue. Walang subtitles, captions, o watermark.\n\nSCRIPT:\n${script}`
+      })
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "AI generation failed.");
+    output.textContent = data.story || "Walang prompt na nabuo.";
+  } catch (error) {
+    output.textContent = "Error: " + error.message;
+  }
+}
+  
 function copyText(id){let t=document.getElementById(id).textContent;navigator.clipboard.writeText(t).then(()=>alert('Nakopya na!')).catch(()=>alert('Pindutin nang matagal ang prompt at piliin ang Copy.'))}
 </script>
 </body>
