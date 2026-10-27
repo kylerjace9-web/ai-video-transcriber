@@ -195,6 +195,11 @@ MGA TUNTUNIN:
 13. Huwag palitan ng buod ang aktuwal na script. Isulat ang kumpletong aksyon at dialogue ng bawat eksena.
 14. Huwag laktawan o pagsamahin ang mga eksena para lang mapabilis ang pagsagot.
 15. Panatilihing makatotohanan ang haba ng dialogue para sa 10 segundong video; huwag piliting ipasok ang napakaraming salita.
+16. Kung isang part lang ang hinihingi, gumawa ng kumpletong standalone story na may malinaw at kasiya-siyang ending. Lutasin ang pangunahing problema at huwag mag-iwan ng cliffhanger o pilit na sequel.
+17. Kung dalawa o higit pang parts ang hinihingi, maaaring magtapos sa cliffhanger ang bawat naunang part upang mahikayat ang manonood na ituloy ang kuwento.
+18. Sa huling part, lutasin ang pangunahing conflict at bigyan ang kuwento ng makabuluhan at kasiya-siyang ending. Huwag mag-iwan ng cliffhanger para lamang magkaroon ng sequel.
+19. Panatilihing consistent ang mga pangalan, edad, hitsura, damit, relasyon, lokasyon, at timeline ng mga tauhan sa lahat ng parts.
+20. Bago isulat ang bawat part, isaalang-alang ang mahahalagang pangyayari sa mga naunang part upang maiwasan ang kontradiksyon at biglaang pagbabago sa kuwento.
 
 FORMAT:
 
