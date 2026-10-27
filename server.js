@@ -173,7 +173,7 @@ app.post("/api/generate-story", async (req, res) => {
     const response = await groq.chat.completions.create({
   model: "openai/gpt-oss-120b",
 temperature: 0.7,
-max_completion_tokens: 12000,
+max_completion_tokens: 4000,
   messages: [
     {
       role: "system",
