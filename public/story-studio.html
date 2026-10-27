@@ -15,6 +15,15 @@
 <h2>📖 PART SCRIPT</h2>
 <label for="partScript">I-paste ang buong script ng Part:</label>
 <textarea id="partScript" rows="8" placeholder="I-paste dito ang buong Tagalog story script..."></textarea>
+  <h2>✨ CREATE ORIGINAL STORY FROM TRANSCRIPT</h2>
+<label for="storyTranscript">I-paste ang transcript ng reference video:</label>
+<textarea id="storyTranscript" rows="6" placeholder="I-paste dito ang transcript mula sa FrameScript..."></textarea>
+<label for="storyParts">Bilang ng parts:</label>
+<input id="storyParts" type="number" min="1" max="20" value="9">
+<label for="storyMinutes">Haba bawat part (minuto):</label>
+<input id="storyMinutes" type="number" min="1" max="10" step="0.5" value="4.5">
+<button type="button" onclick="createOriginalStory()">CREATE ORIGINAL STORY</button>
+<div id="originalStoryOutput"></div>
 <button type="button" onclick="makePrompts()">GENERATE SCENES</button>
 <button onclick="generateImagePrompt()">GENERATE IMAGE PROMPT</button>
 <button onclick="generateVideoPrompt()">GENERATE VIDEO PROMPT</button>
@@ -169,6 +178,39 @@ ${scene}`
     alert("Nakopya na!");
   } catch (error) {
     alert("Pindutin nang matagal ang text at piliin ang Copy.");
+  }
+  }
+  async function createOriginalStory() {
+  const transcript = document.getElementById("storyTranscript").value.trim();
+  const parts = Number(document.getElementById("storyParts").value) || 9;
+  const minutesPerPart = Number(document.getElementById("storyMinutes").value) || 4.5;
+  const output = document.getElementById("originalStoryOutput");
+
+  if (!transcript) {
+    alert("I-paste muna ang transcript ng reference video.");
+    return;
+  }
+
+  output.textContent = "Gumagawa ng bagong original story...";
+
+  try {
+    const response = await fetch("/api/generate-story", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        transcript,
+        parts,
+        minutesPerPart,
+        prompt: "Gumawa ng bagong original na Filipino drama story batay sa reference transcript. Baguhin ang mga pangalan, dialogue, eksena at detalye. Panatilihin lamang ang pangunahing tema at inspirasyon. Ibigay ang pamagat, character list, story outline, at kumpletong script ng bawat part. Bawat scene ay maximum 10 segundo at ang lahat ng binibigkas na numero at halaga ng pera ay isulat sa natural na salitang Tagalog."
+      })
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Hindi nagawa ang story.");
+
+    output.textContent = data.story || "Walang story na nabuo.";
+  } catch (error) {
+    output.textContent = "Error: " + error.message;
   }
   }
 </script>
