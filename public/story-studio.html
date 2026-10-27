@@ -23,6 +23,8 @@
 <label for="storyMinutes">Haba bawat part (minuto):</label>
 <input id="storyMinutes" type="number" min="1" max="10" step="0.5" value="4.5">
 <button type="button" onclick="createOriginalStory()">CREATE ORIGINAL STORY</button>
+<div id="storyPartButtons" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px"></div>
+
 <div id="originalStoryOutput"></div>
   <button type="button" onclick="copyText('originalStoryOutput')">COPY ORIGINAL STORY</button>
 <button type="button" onclick="makePrompts()">GENERATE SCENES</button>
