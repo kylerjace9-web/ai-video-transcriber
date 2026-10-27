@@ -60,10 +60,21 @@ async function makePrompts() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        prompt: `Hatiin ang buong script sa magkakahiwalay na eksena. Maximum 10 segundo bawat eksena. Panatilihin ang eksaktong dialogue. Lagyan ng heading na SCENE 1, SCENE 2, SCENE 3, at iba pa.
+        prompt: `Hatiin ang buong script sa magkakahiwalay na eksena.
+Bawat eksena ay maximum na 10 segundo.
+Panatilihin ang eksaktong kuwento, pangalan, dialogue,
+pagkakasunod-sunod, at continuity ng mga tauhan.
+Huwag magdagdag ng bagong pangyayari o baguhin ang kuwento.
+Ilagay ang bawat eksena sa malinaw na format:
+
+SCENE 1 | 00:00–00:10
+AKSYON:
+DIALOGUE:
+CLIFFHANGER / TRANSITION:
 
 BUONG SCRIPT:
 ${script}`
+
       })
     });
 
