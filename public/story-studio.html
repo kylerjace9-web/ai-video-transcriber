@@ -24,7 +24,6 @@
 <input id="storyMinutes" type="number" min="1" max="10" step="0.5" value="4.5">
 <button type="button" onclick="createOriginalStory()">CREATE ORIGINAL STORY</button>
 <div id="storyPartButtons" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px"></div>
-
 <div id="originalStoryOutput"></div>
   <button type="button" onclick="copyText('originalStoryOutput')">COPY ORIGINAL STORY</button>
 <button type="button" onclick="makePrompts()">GENERATE SCENES</button>
@@ -234,6 +233,66 @@ ${scene}`
     if (!response.ok) throw new Error(data.error || "Hindi nagawa ang story.");
 
     output.textContent = data.story || "Walang story na nabuo.";
+  } catch (error) {
+    output.textContent = "Error: " + error.message;
+  }
+  }
+  async function createOriginalStory() {
+  const transcript = document.getElementById("storyTranscript").value.trim();
+  const parts = Number(document.getElementById("storyParts").value) || 1;
+  const minutesPerPart = Number(document.getElementById("storyMinutes").value) || 4.5;
+  const output = document.getElementById("originalStoryOutput");
+  const buttons = document.getElementById("storyPartButtons");
+
+  if (!transcript) {
+    alert("I-paste muna ang transcript.");
+    return;
+  }
+
+  output.textContent = "Gumagawa ng story parts...";
+  buttons.innerHTML = "";
+
+  try {
+    const response = await fetch("/api/generate-story", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        transcript,
+        parts,
+        minutesPerPart,
+        prompt: `Gumawa ng bagong Filipino drama story. Hatiin sa eksaktong ${parts} bahagi. Bawat bahagi ay humigit-kumulang ${minutesPerPart} minuto, bawat eksena ay 10 segundo. Lagyan ng malinaw na heading na BAHAGI 1, BAHAGI 2, at iba pa. Panatilihing consistent ang mga tauhan at pangyayari. Kung isang bahagi lang, kumpletong ending. Kung maraming bahagi, cliffhanger sa mga naunang bahagi at kumpletong ending sa huling bahagi.`
+      })
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Hindi nagawa ang story.");
+
+    const story = data.story || "";
+    const matches = [...story.matchAll(/BAHAGI\s+\d+[^\n]*/gi)];
+
+    if (!matches.length) {
+      output.textContent = story;
+      return;
+    }
+
+    const sections = matches.map((match, i) => ({
+      name: match[0].trim(),
+      text: story.slice(match.index, i + 1 < matches.length ? matches[i + 1].index : story.length).trim()
+    }));
+
+    output.textContent = sections[0].text;
+
+    sections.forEach((part, i) => {
+      const button = document.createElement("button");
+      button.textContent = part.name;
+      button.style.cssText = `padding:10px;border:0;border-radius:6px;background:${["#2563eb","#16a34a","#9333ea","#ea580c","#0891b2"][i % 5]};color:white;margin:4px`;
+      button.onclick = () => {
+        output.textContent = part.text;
+        buttons.querySelectorAll("button").forEach(b => b.style.outline = "none");
+        button.style.outline = "3px solid white";
+      };
+      buttons.appendChild(button);
+    });
   } catch (error) {
     output.textContent = "Error: " + error.message;
   }
