@@ -88,20 +88,31 @@ ${script}`
     }));
 
     scenes.forEach((item) => {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.textContent = item.name;
+  const button = document.createElement("button");
+  button.type = "button";
+  button.textContent = item.name;
+  button.style.margin = "4px";
+  button.style.backgroundColor = "#38bdf8";
+  button.style.color = "#082f49";
 
-      button.onclick = () => {
-        output.textContent = item.text;
-        document.getElementById("imageOut").textContent =
-          "Napili ang " + item.name + ". Pindutin ang GENERATE IMAGE PROMPT.";
-        document.getElementById("videoOut").textContent =
-          "Napili ang " + item.name + ". Pindutin ang GENERATE VIDEO PROMPT.";
-      };
-
-      buttons.appendChild(button);
+  button.onclick = () => {
+    buttons.querySelectorAll("button").forEach((b) => {
+      b.style.backgroundColor = "#38bdf8";
+      b.style.color = "#082f49";
     });
+
+    button.style.backgroundColor = "#f59e0b";
+    button.style.color = "#111827";
+
+    output.textContent = item.text;
+    document.getElementById("imageOut").textContent =
+      "Napili ang " + item.name + ". Pindutin ang GENERATE IMAGE PROMPT.";
+    document.getElementById("videoOut").textContent =
+      "Napili ang " + item.name + ". Pindutin ang GENERATE VIDEO PROMPT.";
+  };
+
+  buttons.appendChild(button);
+});
 
     output.textContent = scenes[0].text;
   } catch (error) {
