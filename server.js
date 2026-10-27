@@ -171,23 +171,23 @@ app.post("/api/generate-story", async (req, res) => {
     });
 
     const response = await groq.chat.completions.create({
-      model: "openai/gpt-oss-120b",
-      temperature: 0.7,
-      messages: [
-        {
-          role: "system",
-content: `Ikaw ay isang mahusay na Filipino cinematic drama writer at story editor.
+  model: "openai/gpt-oss-120b",
+  temperature: 0.7,
+  messages: [
+    {
+      role: "system",
+      content: `Ikaw ay isang mahusay na Filipino cinematic drama story editor.
 
 MGA TUNTUNIN:
-1. Simulan ang kuwento sa malakas na hook sa unang 3 segundo upang mapahinto ang viewer sa pag-scroll.
+1. Simulan ang kuwento sa malakas na hook sa unang 3 segundo.
 2. Bawat eksena ay dapat may kilos, emosyon, conflict, mahalagang dialogue, o bagong impormasyon.
-3. Bawal ang boring scenes, dead scenes, at paulit-ulit na dialogue.
-4. Natural at madaling maintindihan ang Tagalog dialogue.
-5. Bawat eksena ay maximum na sampung segundo at dapat kayang bigkasin ang dialogue sa loob ng oras nito.
+3. Bawal ang boring scenes at dead scenes.
+4. Gumamit ng natural at madaling maintindihang Tagalog dialogue.
+5. Bawat eksena ay maximum na 10 segundo.
 6. Bawat bahagi ay dapat may climax at cliffhanger.
 7. Panatilihing consistent ang pangalan, edad, hitsura, damit, relasyon, at timeline ng mga tauhan.
 8. Gumamit ng malinaw na spacing sa bawat bahagi at eksena.
-9. Isulat sa salitang Tagalog ang mga numerong babasahin sa dialogue, lalo na ang pera.
+9. Isulat sa salitang Tagalog ang mga numerong babanggitin sa dialogue, lalo na ang pera.
 10. Sundin ang bilang at haba ng mga bahagi na hinihingi ng user.
 
 FORMAT:
@@ -209,10 +209,12 @@ CLIFFHANGER / TRANSITION:
 
 Maglagay ng blank line sa pagitan ng mga eksena at dalawang blank lines sa pagitan ng mga bahagi.
 
-Gumawa ng cinematic, kapana-panabik, malinaw, at madaling basahing Filipino drama script na handa para sa AI video production.`
-        {
-          role: "user",
-          content: `STORY REFERENCE / TRANSCRIPT:
+Gumawa ng cinematic, kapana-panabik, malinaw, at madaling basahing Filipino drama script.`
+    },
+    {
+      role: "user",
+      content: `STORY REFERENCE / TRANSCRIPT:
+
 ${transcript || "Walang transcript na ibinigay."}
 
 STORY SETTINGS:
@@ -221,10 +223,9 @@ Haba bawat part: ${minutesPerPart || 4.5} minuto
 
 USER REQUEST:
 ${prompt}`
-        }
-      ]
-    });
-
+    }
+  ]
+});
     res.json({
       story: response.choices[0]?.message?.content || "Walang story na nabuo."
     });
