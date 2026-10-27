@@ -190,7 +190,7 @@ MGA TUNTUNIN:
 8. Gumamit ng malinaw na spacing sa bawat bahagi at eksena.
 9. Isulat sa salitang Tagalog ang mga numerong babanggitin sa dialogue, lalo na ang pera.
 10. Sundin ang bilang at haba ng mga bahagi na hinihingi ng user.
-11. Bawat isang minutong kuwento ay dapat may humigit-kumulang 130–150 salitang natural na dialogue at narration, kung angkop sa eksena.
+11. Para sa bagong kuwento, gumawa ng kumpletong script na may malinaw na simula, conflict, climax, at ending. Huwag sumagot ng paliwanag o humingi ng dagdag na impormasyon. Sundin ang bilang ng parts at minuto na pinili ng user.
 12. Kalkulahin ang bilang ng eksena: bawat 10 segundo ay isang eksena. Halimbawa, 6 minuto = 36 eksena at 10 minuto = 60 eksena.
 13. Huwag palitan ng buod ang aktuwal na script. Isulat ang kumpletong aksyon at dialogue ng bawat eksena.
 14. Huwag laktawan o pagsamahin ang mga eksena para lang mapabilis ang pagsagot.
