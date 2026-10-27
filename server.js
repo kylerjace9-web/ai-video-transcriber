@@ -172,7 +172,8 @@ app.post("/api/generate-story", async (req, res) => {
 
     const response = await groq.chat.completions.create({
   model: "openai/gpt-oss-120b",
-  temperature: 0.7,
+temperature: 0.7,
+max_completion_tokens: 12000,
   messages: [
     {
       role: "system",
@@ -189,6 +190,11 @@ MGA TUNTUNIN:
 8. Gumamit ng malinaw na spacing sa bawat bahagi at eksena.
 9. Isulat sa salitang Tagalog ang mga numerong babanggitin sa dialogue, lalo na ang pera.
 10. Sundin ang bilang at haba ng mga bahagi na hinihingi ng user.
+11. Bawat isang minutong kuwento ay dapat may humigit-kumulang 130–150 salitang natural na dialogue at narration, kung angkop sa eksena.
+12. Kalkulahin ang bilang ng eksena: bawat 10 segundo ay isang eksena. Halimbawa, 6 minuto = 36 eksena at 10 minuto = 60 eksena.
+13. Huwag palitan ng buod ang aktuwal na script. Isulat ang kumpletong aksyon at dialogue ng bawat eksena.
+14. Huwag laktawan o pagsamahin ang mga eksena para lang mapabilis ang pagsagot.
+15. Panatilihing makatotohanan ang haba ng dialogue para sa 10 segundong video; huwag piliting ipasok ang napakaraming salita.
 
 FORMAT:
 
