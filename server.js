@@ -53,6 +53,59 @@ app.post("/api/analyze", async (req, res) => {
     });
   }
 });
+app.post("/api/analyze-niche", async (req, res) => {
+  try {
+    const { transcript } = req.body;
+
+    if (!transcript || !transcript.trim()) {
+      return res.status(400).json({
+        error: "Walang video transcript na susuriin."
+      });
+    }
+
+    const groq = new OpenAI({
+      apiKey: process.env.GROQ_API_KEY,
+      baseURL: "https://api.groq.com/openai/v1"
+    });
+
+    const response = await groq.chat.completions.create({
+      model: "openai/gpt-oss-120b",
+      temperature: 0.4,
+      max_completion_tokens: 2500,
+      messages: [
+        {
+          role: "system",
+          content: `Ikaw ay video content analyst para sa iba't ibang niche.
+Suriin lamang ang impormasyong nasa transcript. Huwag mag-imbento ng visual na detalye na hindi makikita sa transcript.
+
+Ibigay sa natural na Tagalog:
+1. PAKSA NG VIDEO
+2. ANO ANG GINAGAWA O IPINALILIWANAG
+3. MAHAHALAGANG PUNTO
+4. HOOK SA SIMULA
+5. BUOD NG NARRATION
+6. BAGONG VIDEO SCRIPT na original at madaling sundan
+7. Mga eksenang maaaring ipakita
+8. Suggested title at caption.
+
+Kung health o remedy content, huwag magpakita ng hindi beripikadong lunas bilang katotohanan. Banggitin kung kailangan ng medical verification.`
+        },
+        {
+          role: "user",
+          content: `Suriin ang video transcript na ito:\n\n${transcript}`
+        }
+      ]
+    });
+
+    res.json({
+      analysis: response.choices[0]?.message?.content || "Walang analysis na nabuo."
+    });
+  } catch (err) {
+    res.status(500).json({
+      error: err.message || "Hindi nagawa ang video analysis."
+    });
+  }
+});
 app.post("/api/transcribe", upload.single("media"), async (req, res) => {
   const uploaded = req.file;
   if (!uploaded) {

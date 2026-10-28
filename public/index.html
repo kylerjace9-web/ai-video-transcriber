@@ -81,6 +81,13 @@
   <pre id="analysisResult" style="white-space:pre-wrap;overflow-wrap:anywhere;font-family:inherit"></pre>
 </section>
 
+  <section style="max-width:800px;margin:20px auto;padding:16px;background:#f1f5f9;color:#111;border-radius:12px">
+  <h2>🔎 Analyze Any Niche</h2>
+  <p>Para sa health tips, remedies, tutorials, products at iba pang videos.</p>
+  <button id="analyzeNicheBtn" style="padding:12px;background:#16a34a;color:white;border:0;border-radius:6px">Analyze Video Content</button>
+  <p id="nicheStatus"></p>
+  <pre id="nicheResult" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre>
+  </section>
 <script>
 document.getElementById("analyzeStoryBtn").addEventListener("click", async function () {
   const transcriptBox = document.getElementById("transcriptList");
@@ -114,6 +121,41 @@ document.getElementById("analyzeStoryBtn").addEventListener("click", async funct
     status.textContent = "Tapos na ang pagsusuri!";
   } catch (error) {
     status.textContent = "Nagkaroon ng error: " + error.message;
+  } finally {
+    this.disabled = false;
+  }
+});
+  document.getElementById("analyzeNicheBtn").addEventListener("click", async function () {
+  const status = document.getElementById("nicheStatus");
+  const result = document.getElementById("nicheResult");
+
+  const transcript = Array.from(
+    document.querySelectorAll("#transcriptList textarea")
+  ).map(el => el.value.trim()).filter(Boolean).join("\n");
+
+  if (!transcript) {
+    status.textContent = "Mag-upload at mag-transcribe muna ng video.";
+    return;
+  }
+
+  this.disabled = true;
+  status.textContent = "Sinusuri ang video content...";
+  result.textContent = "";
+
+  try {
+    const response = await fetch("/api/analyze-niche", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ transcript })
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Analysis failed.");
+
+    result.textContent = data.analysis || "Walang analysis na nakuha.";
+    status.textContent = "Tapos na ang pagsusuri!";
+  } catch (error) {
+    status.textContent = "Error: " + error.message;
   } finally {
     this.disabled = false;
   }
