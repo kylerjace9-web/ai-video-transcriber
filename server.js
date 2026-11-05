@@ -53,6 +53,163 @@ app.post("/api/analyze", async (req, res) => {
     });
   }
 });
+
+app.post("/api/analyze-video", upload.single("media"), async (req, res) => {
+  const uploaded = req.file;
+
+  if (!uploaded) {
+    return res.status(400).json({
+      error: "Please upload a video file."
+    });
+  }
+
+  if (!uploaded.mimetype.startsWith("video/")) {
+    fs.unlink(uploaded.path, () => {});
+    return res.status(400).json({
+      error: "Video files only."
+    });
+  }
+
+  if (!process.env.GROQ_API_KEY) {
+    fs.unlink(uploaded.path, () => {});
+    return res.status(503).json({
+      error: "Missing GROQ_API_KEY."
+    });
+  }
+
+  const frameDir = path.join(
+    __dirname,
+    "tmp",
+    `vision-${Date.now()}`
+  );
+
+  fs.mkdirSync(frameDir, { recursive: true });
+
+  try {
+    await new Promise((resolve, reject) => {
+      ffmpeg(uploaded.path)
+        .on("end", resolve)
+        .on("error", reject)
+        .screenshots({
+          count: 3,
+          folder: frameDir,
+          filename: "frame-%i.jpg",
+          size: "640x?"
+        });
+    });
+
+    const frameFiles = fs.readdirSync(frameDir)
+      .filter(name => name.endsWith(".jpg"))
+      .sort((a, b) =>
+        a.localeCompare(b, undefined, { numeric: true })
+      );
+
+    if (!frameFiles.length) {
+      throw new Error("No video frames extracted.");
+    }
+
+    const imageContent = frameFiles.map((name, i) => {
+      const imagePath = path.join(frameDir, name);
+      const base64 = fs.readFileSync(imagePath).toString("base64");
+
+      return [
+        {
+          type: "text",
+          text: `Video frame ${i + 1}`
+        },
+        {
+          type: "image_url",
+          image_url: {
+            url: `data:image/jpeg;base64,${base64}`
+          }
+        }
+      ];
+    }).flat();
+
+    const groq = new OpenAI({
+      apiKey: process.env.GROQ_API_KEY,
+      baseURL: "https://api.groq.com/openai/v1"
+    });
+
+    const response = await groq.chat.completions.create({
+      model: "qwen/qwen3.8-27b",
+      temperature: 0.3,
+      max_completion_tokens: 3000,
+      messages: [
+        {
+          role: "system",
+          content: `You are an expert visual video analyst.
+
+Analyze only what is visible in the supplied frames.
+Do not invent actions or objects.
+The frames are samples, not the complete video.
+
+Write in natural American English.
+
+Use this exact structure:
+
+1. OPENING VISUAL
+Describe what appears in the opening sample.
+
+2. ACTIONS AND MOVEMENTS
+Describe visible actions in sequence.
+
+3. OBJECTS AND INGREDIENTS
+List visible objects, products, tools and ingredients.
+
+4. SCENE-BY-SCENE BREAKDOWN
+Describe each sampled frame in order.
+
+5. CAMERA ANGLES
+Identify close-up, wide shot, overhead, POV,
+eye-level or other visible framing.
+
+6. CAMERA MOVEMENTS
+Identify zoom, pan, tilt or tracking only
+when supported by the samples.
+
+7. VISUAL STYLE AND LIGHTING
+Describe lighting, background and composition.
+
+8. VIDEO SUMMARY
+Summarize what the visuals actually show.
+
+9. CONTENT GAPS
+Identify details that cannot be confirmed
+from the sampled frames.`
+        },
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: "Analyze these video frames in order:"
+            },
+            ...imageContent
+          ]
+        }
+      ]
+    });
+
+    res.json({
+      analysis: response.choices[0]?.message?.content ||
+        "No visual analysis generated.",
+      framesAnalyzed: frameFiles.length
+    });
+
+  } catch (err) {
+    console.error("Visual analysis error:", err);
+
+    res.status(500).json({
+      error: err.message || "Visual analysis failed."
+    });
+
+  } finally {
+    fs.unlink(uploaded.path, () => {});
+    fs.rm(frameDir, { recursive: true, force: true }, () => {});
+  }
+});
+
 app.post("/api/analyze-niche", async (req, res) => {
   try {
     const { transcript } = req.body;
