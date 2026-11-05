@@ -95,7 +95,69 @@
   <pre id="nicheResult" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre>
     <button type="button" onclick="copyAnalysis('nicheResult')">📋 COPY NICHE ANALYSIS</button>
   </section>
+ <section style="max-width:800px;margin:20px auto;padding:20px;background:#e0f2fe;color:#111;border-radius:12px">
+  <h2>🎥 Video Visual Analyzer</h2>
+  <p>Analyze actual video frames, visible actions, objects, ingredients, camera angles, lighting, and visual style.</p>
+
+  <input
+    type="file"
+    id="visualVideoInput"
+    accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.webm"
+  >
+
+  <br><br>
+
+  <button
+    type="button"
+    id="visualAnalyzeBtn"
+    style="padding:12px 18px;background:#1769ff;color:white;border:0;border-radius:8px;font-weight:bold"
+  >
+    Analyze Video Visuals
+  </button>
+
+  <p id="visualStatus" role="status"></p>
+
+  <pre id="visualResult" style="white-space:pre-wrap;overflow-wrap:anywhere;font-family:inherit"></pre>
+
+  <button type="button" onclick="copyAnalysis('visualResult')">
+    📋 COPY VISUAL ANALYSIS
+  </button>
+</section>
 <script>
+ document.getElementById("visualAnalyzeBtn").addEventListener("click", async function () {
+  const fileInput = document.getElementById("visualVideoInput");
+  const status = document.getElementById("visualStatus");
+  const result = document.getElementById("visualResult");
+
+  if (!fileInput.files.length) {
+    status.textContent = "Please select a video first.";
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("media", fileInput.files[0]);
+
+  this.disabled = true;
+  status.textContent = "Analyzing video frames... Please wait.";
+  result.textContent = "";
+
+  try {
+    const response = await fetch("/api/analyze-video", {
+      method: "POST",
+      body: formData
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Visual analysis failed.");
+
+    result.textContent = data.analysis || "No visual analysis received.";
+    status.textContent = "Visual analysis complete! Frames analyzed: " + data.framesAnalyzed;
+  } catch (error) {
+    status.textContent = "Error: " + error.message;
+  } finally {
+    this.disabled = false;
+  }
+});
   function copyAnalysis(elementId) {
   const text = document.getElementById(elementId).innerText;
   if (!text.trim()) {
