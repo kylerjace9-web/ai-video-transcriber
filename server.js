@@ -52,14 +52,39 @@ cookie: {
 }
 }));
 // AUTHENTICATION MIDDLEWARE
-function requireAuth(req, res, next) {
+async function requireAuth(req, res, next) {
   if (!req.session.user) {
     return res.status(401).json({
       error: "Please log in first."
     });
   }
 
-  next();
+  if (req.session.user.role === "admin") {
+    return next();
+  }
+
+  try {
+    const result = await pool.query(
+      "SELECT status FROM users WHERE id = $1",
+      [req.session.user.id]
+    );
+
+    if (!result.rows.length || result.rows[0].status !== "approved") {
+      return req.session.destroy(() => {
+        res.clearCookie("connect.sid");
+        res.status(403).json({
+          error: "Your account is not approved or is currently inactive."
+        });
+      });
+    }
+
+    next();
+  } catch (err) {
+    console.error("Authentication error:", err);
+    res.status(500).json({
+      error: "Authentication failed."
+    });
+  }
 }
 
 // ADMIN-ONLY MIDDLEWARE
@@ -380,7 +405,7 @@ app.post("/api/logout", (req, res) => {
 app.get("/api/health", (_req, res) => {
   res.json({ ok: true, apiKeyConfigured: Boolean(process.env.GROQ_API_KEY) });
 });
-app.post("/api/analyze", async (req, res) => {
+app.post("/api/analyze", requireAuth, async (req, res) => {
   try {
     const { transcript } = req.body;
     const analysis = await analyzeStory({
@@ -395,7 +420,7 @@ app.post("/api/analyze", async (req, res) => {
   }
 });
 
-app.post("/api/analyze-video", upload.single("media"), async (req, res) => {
+app.post("/api/analyze-video", requireAuth, upload.single("media"), async (req, res) => {
   const uploaded = req.file;
 
   if (!uploaded) {
@@ -572,7 +597,7 @@ Make the report detailed and useful for recreating an original competing video.`
     fs.rm(frameDir, { recursive: true, force: true }, () => {});
   }
 });
-app.post("/api/analyze-niche", async (req, res) => {
+app.post("/api/analyze-niche", requireAuth, async (req, res) => {
   try {
     const { transcript } = req.body;
 
@@ -651,7 +676,7 @@ Use natural American English, American phrasing, and US customary units when rel
     });
   }
 });
-app.post("/api/transcribe", upload.single("media"), async (req, res) => {
+app.post("/api/transcribe", requireAuth, upload.single("media"), async (req, res) => {
   const uploaded = req.file;
   if (!uploaded) {
     return res.status(400).json({ error: "Please upload an audio or video file." });
@@ -754,7 +779,7 @@ app.use((err, _req, res, _next) => {
   }
   res.status(400).json({ error: err?.message || "Upload error." });
 });
-app.post("/api/generate-story", async (req, res) => {
+app.post("/api/generate-story", requireAuth, async (req, res) => {
   try {
     const { prompt, transcript, parts, minutesPerPart } = req.body;
     if (!prompt || !prompt.trim()) {
