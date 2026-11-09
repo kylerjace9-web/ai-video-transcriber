@@ -472,51 +472,71 @@ app.post("/api/analyze-video", requireAuth, upload.single("media"), async (req, 
       throw new Error("No video frames extracted.");
     }
 
-    const groq = new OpenAI({
-      apiKey: process.env.GROQ_API_KEY,
-      baseURL: "https://api.groq.com/openai/v1"
-    });
+          const geminiUrl =
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`;
 
-    const observations = [];
+      if (!process.env.GEMINI_API_KEY) {
+        throw new Error("Missing GEMINI_API_KEY.");
+      }
 
-    for (let i = 0; i < frameFiles.length; i += 3) {
-      const batch = frameFiles.slice(i, i + 3);
-
-      const imageContent = batch.flatMap((name, index) => {
-        const frameNumber = i + index;
-        const imagePath = path.join(frameDir, name);
-        const base64 = fs.readFileSync(imagePath).toString("base64");
-
-        return [
-          {
-            type: "text",
-            text: `Timestamp: ${frameNumber} seconds`
+      async function askGemini(parts, maxTokens = 3000) {
+        const response = await fetch(geminiUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
           },
-          {
-            type: "image_url",
-            image_url: {
-              url: `data:image/jpeg;base64,${base64}`
+          body: JSON.stringify({
+            contents: [{ role: "user", parts }],
+            generationConfig: {
+              temperature: 0.2,
+              maxOutputTokens: maxTokens
             }
-          }
-        ];
-      });
+          })
+        });
 
-      const response = await groq.chat.completions.create({
-        model: "qwen/qwen3.8-27b",
-        temperature: 0.2,
-        max_completion_tokens: 700,
-        messages: [
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.error?.message || "Gemini API request failed."
+          );
+        }
+
+        return (data.candidates?.[0]?.content?.parts || [])
+          .map(part => part.text || "")
+          .join("\n");
+      }
+
+      const observations = [];
+
+      for (let i = 0; i < frameFiles.length; i += 3) {
+        const batch = frameFiles.slice(i, i + 3);
+
+        const imageContent = batch.flatMap((name, index) => {
+          const frameNumber = i + index + 1;
+          const imagePath = path.join(frameDir, name);
+          const base64 = fs.readFileSync(imagePath).toString("base64");
+
+          return [
+            {
+              text: `Timestamp: ${frameNumber} seconds`
+            },
+            {
+              inlineData: {
+                mimeType: "image/jpeg",
+                data: base64
+              }
+            }
+          ];
+        });
+
+        const analysis = await askGemini([
           {
-            role: "system",
-            content: `You are an expert visual video analyst.
+            text: `You are an expert visual video analyst.
 
-Analyze each supplied frame separately and in chronological order.
+Analyze these video frames separately and in chronological order.
 
-Do not invent actions between frames.
-Describe only what is actually visible.
-Clearly state when a movement or detail cannot be confirmed.
-
-For EACH frame provide:
+For EACH frame describe:
 1. Exact timestamp.
 2. Main subject and visible objects.
 3. Actual visible action or pose.
@@ -524,33 +544,24 @@ For EACH frame provide:
 5. Camera angle and framing.
 6. Camera movement only if it can be established.
 7. Lighting, background and composition.
-8. Visible changes compared with the previous frame.
+8. Visible changes compared with previous frames.
 
+Do not invent actions between frames.
+Describe only what is actually visible.
+Clearly state when a detail cannot be confirmed.
 Write in detailed natural American English.`
           },
-          {
-            role: "user",
-            content: [
-              { type: "text", text: "Analyze these frames in order:" },
-              ...imageContent
-            ]
-          }
-        ]
-      });
+          ...imageContent
+        ]);
 
-      observations.push(response.choices[0]?.message?.content || "");
-    }
+        observations.push(analysis);
+      }
 
-    const combined = await groq.chat.completions.create({
-      model: "openai/gpt-oss-120b",
-      temperature: 0.2,
-      max_completion_tokens: 5000,
-      messages: [
+      const combined = await askGemini([
         {
-          role: "system",
-          content: `You are a professional video reverse-engineering analyst.
+          text: `You are a professional video reverse-engineering analyst.
 
-Combine the supplied timestamped visual observations into one complete chronological report.
+Combine these timestamped visual observations into one complete chronological report.
 
 Do not invent missing frames, dialogue, actions or results.
 Preserve timestamps.
@@ -572,21 +583,19 @@ Use this exact structure:
 12. OPPORTUNITIES TO CREATE A STRONGER ORIGINAL VIDEO
 
 Write in natural American English.
-Make the report detailed and useful for recreating an original competing video.`
-        },
-        {
-          role: "user",
-          content: observations.join("\n\n--- NEXT FRAME BATCH ---\n\n")
+Make the report detailed and useful for creating an original competing video.
+
+VISUAL OBSERVATIONS:
+
+${observations.join("\n\n--- NEXT FRAME BATCH ---\n\n")}`
         }
-      ]
-    });
+      ], 5000);
 
-    res.json({
-      analysis: combined.choices[0]?.message?.content || "No visual analysis generated.",
-      framesAnalyzed: frameFiles.length,
-      duration
-    });
-
+      res.json({
+        analysis: combined || "No visual analysis generated.",
+        framesAnalyzed: frameFiles.length,
+        duration
+      });
   } catch (err) {
     console.error("Visual analysis error:", err);
     res.status(500).json({
