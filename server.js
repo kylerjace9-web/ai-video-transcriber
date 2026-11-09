@@ -70,6 +70,57 @@ const upload = multer({
 fs.mkdirSync(path.join(path.dirname(fileURLToPath(import.meta.url)), "tmp"), { recursive: true });
 app.use(express.static(path.join(path.dirname(fileURLToPath(import.meta.url)), "public")));
 
+// CLIENT REGISTRATION
+app.post("/api/register", async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        error: "All fields are required."
+      });
+    }
+
+    if (password.length < 8) {
+      return res.status(400).json({
+        error: "Password must be at least 8 characters."
+      });
+    }
+
+    const cleanName = name.trim();
+    const cleanEmail = email.trim().toLowerCase();
+
+    if (!cleanName || cleanName.length > 255) {
+      return res.status(400).json({
+        error: "Invalid name."
+      });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 12);
+
+    await pool.query(
+      `INSERT INTO users (name, email, password_hash, role, status)
+       VALUES ($1, $2, $3, 'client', 'pending')`,
+      [cleanName, cleanEmail, passwordHash]
+    );
+
+    res.status(201).json({
+      message: "Registration successful. Await admin approval."
+    });
+
+  } catch (err) {
+    if (err.code === "23505") {
+      return res.status(409).json({
+        error: "Email is already registered."
+      });
+    }
+
+    console.error("Registration error:", err);
+    res.status(500).json({
+      error: "Registration failed."
+    });
+  }
+});
 app.get("/api/health", (_req, res) => {
   res.json({ ok: true, apiKeyConfigured: Boolean(process.env.GROQ_API_KEY) });
 });
