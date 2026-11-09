@@ -3,6 +3,7 @@ import express from "express";
 import multer from "multer";
 import OpenAI, { toFile } from "openai";
 import { Pool } from "pg";
+import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
 import path from "node:path";
 import fs from "node:fs";
