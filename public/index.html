@@ -8,21 +8,44 @@
 <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
+
 <header class="topbar">
- <div class="brand-copy">
-  <strong>KY JACE</strong>
-  <span>AI VIDEO STUDIO</span>
-</div>
-  <span class="status"><i></i> LOCAL WORKSPACE</span>
+  <div class="brand-copy">
+    <div class="brand-icon">🎬</div>
+    <div>
+      <strong>FrameScript <span class="brand-ai">AI</span></strong>
+      <small>Video Transcriber</small>
+    </div>
+  </div>
+
+  <details class="mobile-menu">
+    <summary aria-label="Open navigation menu">☰</summary>
+    <nav>
+      <a href="#home">Home</a>
+     <a href="#dropzone">Transcribe</a>
+      <a href="#features">Features</a>
+      <a href="#how-it-works">How It Works</a>
+      <a href="/story-studio.html">Story Studio</a>
+    </nav>
+  </details>
 </header>
-<main class="shell">
+
+<main class="shell" id="home">
   <section class="intro">
-    <div class="eyebrow">TRANSCRIBE · TIMECODE · EXPORT</div>
-    <h1>Every word.<br><em>Right on time.</em></h1>
-    <p>Turn your video into an editable transcript, subtitles, and a scene-by-scene dialogue breakdown.</p>
+    <div class="eyebrow">✦ AI VIDEO TRANSCRIPTION</div>
+    <h1>Turn Videos into<br>Text, Subtitles, and<br><em>Scene Breakdowns</em></h1>
+    <p>AI-powered transcription, subtitle generation, scene analysis, and speaker identification — fast, accurate, and easy.</p>
+
+    <div class="hero-features">
+      <span>⚡ Fast Processing</span>
+      <span>◎ High Accuracy</span>
+      <span>♙ Speaker Identification</span>
+      <span>▱ Scene Breakdown</span>
+    </div>
   </section>
 
-  <section class="upload-card" id="dropzone">
+
+<section class="upload-card" id="dropzone" aria-label="Upload video or audio">
     <input id="fileInput" type="file" accept="video/mp4,video/quicktime,video/webm,audio/mpeg,audio/mp4,audio/wav,audio/webm,audio/ogg,.mp4,.mov,.webm,.mp3,.m4a,.wav" hidden>
     <div class="upload-icon">↑</div>
     <h2>Drop your video or audio here</h2>
