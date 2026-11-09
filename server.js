@@ -41,14 +41,15 @@ app.use(session({
     createTableIfMissing: true
   }),
   secret: process.env.SESSION_SECRET,
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    httpOnly: true,
-    secure: true,
-    sameSite: "lax",
-    maxAge: 7 * 24 * 60 * 60 * 1000
-  }
+resave: false,
+saveUninitialized: false,
+rolling: true,
+cookie: {
+  httpOnly: true,
+  secure: true,
+  sameSite: "lax",
+  maxAge: 30 * 60 * 1000
+}
 }));
 // AUTHENTICATION MIDDLEWARE
 function requireAuth(req, res, next) {
