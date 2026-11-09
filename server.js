@@ -137,6 +137,7 @@ app.get("/api/admin/users", requireAdmin, async (req, res) => {
     const result = await pool.query(
       `SELECT id, name, email, role, status, created_at
        FROM users
+WHERE role = 'client'
        ORDER BY created_at DESC`
     );
 
