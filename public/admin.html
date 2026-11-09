@@ -1,1 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KY JACE | Admin Dashboard</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#0b1020;color:#fff;font-family:Arial,sans-serif;padding:20px}
+.container{max-width:900px;margin:auto}
+.card{background:#151d32;border:1px solid #293653;border-radius:15px;padding:20px;margin-bottom:18px}
+h1{font-size:25px;margin-top:0}
+h2{font-size:19px}
+input,button{width:100%;padding:13px;margin:7px 0;border-radius:8px;border:1px solid #34415e;font-size:15px}
+input{background:#0d1528;color:white}
+button{background:#536dfe;color:white;border:0;font-weight:bold;cursor:pointer}
+button:disabled{opacity:.5}
+.secondary{background:#34415e}
+.danger{background:#c0394b}
+.success{background:#16875d}
+.user{background:#0d1528;border:1px solid #293653;border-radius:10px;padding:15px;margin:12px 0}
+.user p{margin:7px 0;overflow-wrap:anywhere}
+.actions{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}
+#dashboard,#setup{display:none}
+#message{white-space:pre-wrap;color:#ffd166}
+small{color:#aab7d0}
+@media(max-width:500px){body{padding:12px}.actions{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="container">
 
+<h1>KY JACE | Admin Dashboard</h1>
+<p><small>AI Video Studio — Account Management</small></p>
+<p id="message"></p>
+
+<section class="card" id="login">
+<h2>Admin Login</h2>
+<input id="loginEmail" type="email" placeholder="Admin email">
+<input id="loginPassword" type="password" placeholder="Password">
+<button onclick="loginAdmin()">LOGIN</button>
+</section>
+
+<section class="card" id="setup">
+<h2>One-Time Admin Setup</h2>
+<p><small>Gamitin lamang kung wala pang Admin account.</small></p>
+<input id="setupToken" type="password" placeholder="Admin setup token">
+<input id="setupName" placeholder="Admin name">
+<input id="setupEmail" type="email" placeholder="Admin email">
+<input id="setupPassword" type="password" placeholder="Password (12 characters minimum)">
+<button onclick="setupAdmin()">CREATE ADMIN</button>
+</section>
+
+<section id="dashboard">
+<div class="card">
+<h2>Admin Controls</h2>
+<button onclick="loadUsers()">REFRESH CLIENT LIST</button>
+<button class="secondary" onclick="logoutAdmin()">LOG OUT</button>
+</div>
+
+<div class="card">
+<h2>Registered Clients</h2>
+<div id="users">Loading...</div>
+</div>
+</section>
+
+</div>
+
+<script>
+const message = document.getElementById("message");
+
+async function api(url, options = {}) {
+  const response = await fetch(url, {
+    credentials: "same-origin",
+    headers: {"Content-Type":"application/json", ...(options.headers || {})},
+    ...options
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || data.message || "Request failed.");
+  return data;
+}
+
+function showMessage(text) {
+  message.textContent = text;
+}
+
+async function loginAdmin() {
+  try {
+    const data = await api("/api/login", {
+      method:"POST",
+      body:JSON.stringify({
+        email:document.getElementById("loginEmail").value,
+        password:document.getElementById("loginPassword").value
+      })
+    });
+    if (data.user.role !== "admin") throw new Error("Admin account lang ang puwedeng mag-login dito.");
+    showMessage("Admin login successful.");
+    await checkAdmin();
+  } catch(error) {
+    showMessage(error.message);
+  }
+}
+
+async function setupAdmin() {
+  try {
+    const data = await api("/api/setup-admin", {
+      method:"POST",
+      body:JSON.stringify({
+        token:document.getElementById("setupToken").value,
+        name:document.getElementById("setupName").value,
+        email:document.getElementById("setupEmail").value,
+        password:document.getElementById("setupPassword").value
+      })
+    });
+    showMessage(data.message || "Admin created. Mag-login na.");
+    document.getElementById("setup").style.display="none";
+  } catch(error) {
+    showMessage(error.message);
+  }
+}
+
+async function checkAdmin() {
+  try {
+    const data = await api("/api/me");
+    if (!data.authenticated || data.user.role !== "admin") {
+      document.getElementById("login").style.display="block";
+      document.getElementById("dashboard").style.display="none";
+      return;
+    }
+    document.getElementById("login").style.display="none";
+    document.getElementById("setup").style.display="none";
+    document.getElementById("dashboard").style.display="block";
+    await loadUsers();
+  } catch(error) {
+    showMessage(error.message);
+  }
+}
+
+async function loadUsers() {
+  const area = document.getElementById("users");
+  area.textContent = "Loading clients...";
+  try {
+    const data = await api("/api/admin/users");
+    area.innerHTML = "";
+    if (!data.users.length) {
+      area.textContent = "Wala pang registered clients.";
+      return;
+    }
+
+    data.users.forEach(user => {
+      const item = document.createElement("div");
+      item.className = "user";
+
+      const title = document.createElement("strong");
+      title.textContent = user.name || "Unnamed client";
+
+      const email = document.createElement("p");
+      email.textContent = user.email;
+
+      const status = document.createElement("p");
+      status.textContent = "Status: " + user.status;
+
+      const date = document.createElement("small");
+      date.textContent = "Registered: " + new Date(user.created_at).toLocaleString();
+
+      const actions = document.createElement("div");
+      actions.className = "actions";
+
+      ["approved","rejected","suspended","pending"].forEach(value => {
+        const button = document.createElement("button");
+        button.textContent = value.toUpperCase();
+        button.className =
+          value === "approved" ? "success" :
+          value === "rejected" || value === "suspended" ? "danger" : "secondary";
+        button.onclick = () => updateStatus(user.id, value);
+        actions.appendChild(button);
+      });
+
+      item.append(title,email,status,date,actions);
+      area.appendChild(item);
+    });
+  } catch(error) {
+    area.textContent = error.message;
+  }
+}
+
+async function updateStatus(id, status) {
+  if (!confirm("Palitan ang client status sa " + status + "?")) return;
+  try {
+    await api("/api/admin/users/" + id + "/status", {
+      method:"PATCH",
+      body:JSON.stringify({status})
+    });
+    showMessage("Client status updated.");
+    await loadUsers();
+  } catch(error) {
+    showMessage(error.message);
+  }
+}
+
+async function logoutAdmin() {
+  try {
+    await api("/api/logout", {method:"POST"});
+    document.getElementById("dashboard").style.display="none";
+    document.getElementById("login").style.display="block";
+    showMessage("Logged out.");
+  } catch(error) {
+    showMessage(error.message);
+  }
+}
+
+checkAdmin();
+</script>
+</body>
+</html>
