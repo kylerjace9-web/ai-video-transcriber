@@ -138,7 +138,7 @@ app.post("/api/analyze-video", upload.single("media"), async (req, res) => {
       const response = await groq.chat.completions.create({
         model: "qwen/qwen3.8-27b",
         temperature: 0.2,
-        max_completion_tokens: 2000,
+        max_completion_tokens: 700,
         messages: [
           {
             role: "system",
