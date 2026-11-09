@@ -473,7 +473,7 @@ app.post("/api/analyze-video", requireAuth, upload.single("media"), async (req, 
     }
 
           const geminiUrl =
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`;
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${process.env.GEMINI_API_KEY}`;
 
       if (!process.env.GEMINI_API_KEY) {
         throw new Error("Missing GEMINI_API_KEY.");
