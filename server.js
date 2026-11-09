@@ -131,6 +131,71 @@ app.post("/api/setup-admin", async (req, res) => {
     client.release();
   }
 });
+// ADMIN: VIEW ALL CLIENTS
+app.get("/api/admin/users", requireAdmin, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT id, name, email, role, status, created_at
+       FROM users
+       ORDER BY created_at DESC`
+    );
+
+    res.json({ users: result.rows });
+
+  } catch (err) {
+    console.error("Admin users error:", err);
+    res.status(500).json({
+      error: "Could not load users."
+    });
+  }
+});
+
+// ADMIN: UPDATE CLIENT STATUS
+app.patch("/api/admin/users/:id/status", requireAdmin, async (req, res) => {
+  try {
+    const userId = Number(req.params.id);
+    const { status } = req.body;
+
+    const allowedStatuses = [
+      "pending",
+      "approved",
+      "rejected",
+      "suspended"
+    ];
+
+    if (!Number.isInteger(userId) || userId < 1 ||
+        !allowedStatuses.includes(status)) {
+      return res.status(400).json({
+        error: "Invalid user ID or status."
+      });
+    }
+
+    const result = await pool.query(
+      `UPDATE users
+       SET status = $1
+       WHERE id = $2 AND role = 'client'
+       RETURNING id, name, email, role, status`,
+      [status, userId]
+    );
+
+    if (!result.rows.length) {
+      return res.status(404).json({
+        error: "Client account not found."
+      });
+    }
+
+    res.json({
+      message: "Client status updated.",
+      user: result.rows[0]
+    });
+
+  } catch (err) {
+    console.error("Status update error:", err);
+    res.status(500).json({
+      error: "Could not update client status."
+    });
+  }
+});
 const PORT = process.env.PORT || 3000;
 const MAX_MB = Number(process.env.MAX_UPLOAD_MB || 100);
 
