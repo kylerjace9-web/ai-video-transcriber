@@ -2,6 +2,7 @@ import { analyzeStory } from "./analyzer.js";
 import express from "express";
 import multer from "multer";
 import OpenAI, { toFile } from "openai";
+import { Pool } from "pg";
 import dotenv from "dotenv";
 import path from "node:path";
 import fs from "node:fs";
@@ -11,6 +12,12 @@ import ffmpegPath from "@ffmpeg-installer/ffmpeg";
 ffmpeg.setFfmpegPath(ffmpegPath.path);
 
 dotenv.config();
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
