@@ -71,6 +71,66 @@ function requireAdmin(req, res, next) {
 
   next();
 }
+// ONE-TIME ADMIN SETUP
+app.post("/api/setup-admin", async (req, res) => {
+  const { token, name, email, password } = req.body;
+
+  if (!process.env.ADMIN_SETUP_TOKEN ||
+      token !== process.env.ADMIN_SETUP_TOKEN) {
+    return res.status(403).json({
+      error: "Invalid setup token."
+    });
+  }
+
+  if (!name || !email || !password || password.length < 12) {
+    return res.status(400).json({
+      error: "Name, email, and a password of at least 12 characters are required."
+    });
+  }
+
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+    await client.query("SELECT pg_advisory_xact_lock(734219)");
+
+    const existing = await client.query(
+      "SELECT id FROM users WHERE role = 'admin' LIMIT 1"
+    );
+
+    if (existing.rows.length) {
+      await client.query("ROLLBACK");
+      return res.status(403).json({
+        error: "Admin account already exists."
+      });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 12);
+
+    const result = await client.query(
+      `INSERT INTO users (name, email, password_hash, role, status)
+       VALUES ($1, $2, $3, 'admin', 'approved')
+       RETURNING id, name, email, role, status`,
+      [name.trim(), email.trim().toLowerCase(), passwordHash]
+    );
+
+    await client.query("COMMIT");
+
+    res.status(201).json({
+      message: "Admin account created successfully.",
+      user: result.rows[0]
+    });
+
+  } catch (err) {
+    await client.query("ROLLBACK");
+    console.error("Admin setup error:", err);
+    res.status(500).json({
+      error: "Admin setup failed."
+    });
+  } finally {
+    client.release();
+  }
+});
 const PORT = process.env.PORT || 3000;
 const MAX_MB = Number(process.env.MAX_UPLOAD_MB || 100);
 
