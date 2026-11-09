@@ -121,6 +121,80 @@ app.post("/api/register", async (req, res) => {
     });
   }
 });
+// USER LOGIN
+app.post("/api/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({
+        error: "Email and password are required."
+      });
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+
+    const result = await pool.query(
+      "SELECT id, name, email, password_hash, role, status FROM users WHERE email = $1",
+      [cleanEmail]
+    );
+
+    if (!result.rows.length) {
+      return res.status(401).json({
+        error: "Invalid email or password."
+      });
+    }
+
+    const user = result.rows[0];
+    const validPassword = await bcrypt.compare(
+      password,
+      user.password_hash
+    );
+
+    if (!validPassword) {
+      return res.status(401).json({
+        error: "Invalid email or password."
+      });
+    }
+
+    if (user.status === "pending") {
+      return res.status(403).json({
+        error: "Your account is waiting for admin approval."
+      });
+    }
+
+    if (user.status !== "approved") {
+      return res.status(403).json({
+        error: "Your account is not active."
+      });
+    }
+
+    await new Promise((resolve, reject) => {
+      req.session.regenerate(err => {
+        if (err) reject(err);
+        else resolve();
+      });
+    });
+
+    req.session.user = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role
+    };
+
+    res.json({
+      message: "Login successful.",
+      user: req.session.user
+    });
+
+  } catch (err) {
+    console.error("Login error:", err);
+    res.status(500).json({
+      error: "Login failed."
+    });
+  }
+});
 app.get("/api/health", (_req, res) => {
   res.json({ ok: true, apiKeyConfigured: Boolean(process.env.GROQ_API_KEY) });
 });
