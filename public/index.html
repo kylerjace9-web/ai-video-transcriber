@@ -93,59 +93,67 @@
 </main>
 <script src="/app.js"></script>
 
-<div style="text-align:center;padding:20px">
-  <a href="/story-studio.html" style="display:inline-block;background:#1769ff;color:white;padding:14px 22px;border-radius:10px;text-decoration:none;font-weight:bold">
+
+<section class="feature-section" id="features">
+
+  <a href="/story-studio.html" class="studio-link">
     🎬 OPEN STORY STUDIO
   </a>
-</div>
-  
-<section style="max-width:800px;margin:20px auto;padding:16px;background:#f3f4f6;border-radius:12px;color:#111">
-  <h2>🔎 Analyze Story</h2>
-  <p>Transcribe muna ang video, pagkatapos suriin ang kuwento.</p>
-  <button id="analyzeStoryBtn" style="padding:12px 18px;background:#1769ff;color:white;border:0;border-radius:8px;font-weight:bold">
-    Analyze Story
+
+  <a href="#analyze-story" class="feature-card story-card">
+    <div class="feature-icon">📄</div>
+    <div class="feature-copy">
+      <h2>Analyze Story</h2>
+      <p>Transcribe your video and get a detailed story and scene breakdown.</p>
+    </div>
+    <span class="feature-action">Analyze Story ›</span>
+  </a>
+
+  <section class="feature-card niche-card" id="analyze-niche">
+    <div class="feature-icon">🔎</div>
+    <div class="feature-copy">
+      <h2>Analyze Any Niche</h2>
+      <p>Explore topics, claims, key moments and content ideas from any video.</p>
+    </div>
+    <button id="analyzeNicheBtn" class="feature-action" type="button">
+      Explore Content ›
+    </button>
+    <p id="nicheStatus"></p>
+    <pre id="nicheResult"></pre>
+    <button type="button" onclick="copyAnalysis('nicheResult')">📋 COPY NICHE ANALYSIS</button>
+  </section>
+
+  <section class="feature-card visual-card" id="visual-analyzer">
+    <div class="feature-icon">🎥</div>
+    <div class="feature-copy">
+      <h2>Video Visual Analyzer</h2>
+      <p>Analyze video shots, actions, objects, ingredients, camera angles and visual details.</p>
+    </div>
+    <input type="file" id="visualVideoInput" accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.webm">
+    <button id="visualAnalyzeBtn" class="feature-action" type="button">
+      Analyze Visuals ›
+    </button>
+    <p id="visualStatus" role="status"></p>
+    <pre id="visualResult"></pre>
+    <button type="button" onclick="copyAnalysis('visualResult')">📋 COPY VISUAL ANALYSIS</button>
+  </section>
+
+</section>
+
+<section class="feature-card story-card" id="analyze-story">
+  <div class="feature-icon">📄</div>
+  <div class="feature-copy">
+    <h2>Analyze Story</h2>
+    <p>Get a scene-by-scene story breakdown from your transcript.</p>
+  </div>
+  <button id="analyzeStoryBtn" class="feature-action" type="button">
+    Analyze Story ›
   </button>
   <p id="analysisStatus" role="status"></p>
-  <pre id="analysisResult" style="white-space:pre-wrap;overflow-wrap:anywhere;font-family:inherit"></pre>
+  <pre id="analysisResult"></pre>
   <button type="button" onclick="copyAnalysis('analysisResult')">📋 COPY STORY ANALYSIS</button>
 </section>
 
-  <section style="max-width:800px;margin:20px auto;padding:16px;background:#f1f5f9;color:#111;border-radius:12px">
-  <h2>🔎 Analyze Any Niche</h2>
-  <p>Para sa health tips, remedies, tutorials, products at iba pang videos.</p>
-  <button id="analyzeNicheBtn" style="padding:12px;background:#16a34a;color:white;border:0;border-radius:6px">Analyze Video Content</button>
-  <p id="nicheStatus"></p>
-  <pre id="nicheResult" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre>
-    <button type="button" onclick="copyAnalysis('nicheResult')">📋 COPY NICHE ANALYSIS</button>
-  </section>
- <section style="max-width:800px;margin:20px auto;padding:20px;background:#e0f2fe;color:#111;border-radius:12px">
-  <h2>🎥 Video Visual Analyzer</h2>
-  <p>Analyze actual video frames, visible actions, objects, ingredients, camera angles, lighting, and visual style.</p>
-
-  <input
-    type="file"
-    id="visualVideoInput"
-    accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.webm"
-  >
-
-  <br><br>
-
-  <button
-    type="button"
-    id="visualAnalyzeBtn"
-    style="padding:12px 18px;background:#1769ff;color:white;border:0;border-radius:8px;font-weight:bold"
-  >
-    Analyze Video Visuals
-  </button>
-
-  <p id="visualStatus" role="status"></p>
-
-  <pre id="visualResult" style="white-space:pre-wrap;overflow-wrap:anywhere;font-family:inherit"></pre>
-
-  <button type="button" onclick="copyAnalysis('visualResult')">
-    📋 COPY VISUAL ANALYSIS
-  </button>
-</section>
 <script>
  document.getElementById("visualAnalyzeBtn").addEventListener("click", async function () {
   const fileInput = document.getElementById("visualVideoInput");
