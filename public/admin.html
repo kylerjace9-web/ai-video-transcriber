@@ -21,7 +21,7 @@ button:disabled{opacity:.5}
 .user{background:#0d1528;border:1px solid #293653;border-radius:10px;padding:15px;margin:12px 0}
 .user p{margin:7px 0;overflow-wrap:anywhere}
 .actions{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}
-#dashboard,#setup{display:none}
+#dashboard{display:none}
 #message{white-space:pre-wrap;color:#ffd166}
 small{color:#aab7d0}
 @media(max-width:500px){body{padding:12px}.actions{grid-template-columns:1fr}}
@@ -188,9 +188,9 @@ async function updateStatus(id, status) {
   if (!confirm("Palitan ang client status sa " + status + "?")) return;
   try {
     await api("/api/admin/users/" + id + "/status", {
-      method:"PATCH",
-      body:JSON.stringify({status})
-    });
+  method:"PATCH",
+  body:JSON.stringify({status: status})
+});
     showMessage("Client status updated.");
     await loadUsers();
   } catch(error) {
