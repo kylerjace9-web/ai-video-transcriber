@@ -58,158 +58,179 @@ app.post("/api/analyze-video", upload.single("media"), async (req, res) => {
   const uploaded = req.file;
 
   if (!uploaded) {
-    return res.status(400).json({
-      error: "Please upload a video file."
-    });
+    return res.status(400).json({ error: "Please upload a video file." });
   }
 
   if (!uploaded.mimetype.startsWith("video/")) {
     fs.unlink(uploaded.path, () => {});
-    return res.status(400).json({
-      error: "Video files only."
-    });
+    return res.status(400).json({ error: "Video files only." });
   }
 
   if (!process.env.GROQ_API_KEY) {
     fs.unlink(uploaded.path, () => {});
-    return res.status(503).json({
-      error: "Missing GROQ_API_KEY."
-    });
+    return res.status(503).json({ error: "Missing GROQ_API_KEY." });
   }
 
-  const frameDir = path.join(
-    __dirname,
-    "tmp",
-    `vision-${Date.now()}`
-  );
-
+  const frameDir = path.join(__dirname, "tmp", `vision-${Date.now()}`);
   fs.mkdirSync(frameDir, { recursive: true });
 
   try {
+    const duration = await new Promise((resolve, reject) => {
+      ffmpeg.ffprobe(uploaded.path, (err, metadata) => {
+        if (err) return reject(err);
+        resolve(Number(metadata.format.duration || 0));
+      });
+    });
+
+    if (!duration || duration > 60) {
+      throw new Error("Video must be between 1 and 60 seconds.");
+    }
+
     await new Promise((resolve, reject) => {
       ffmpeg(uploaded.path)
+        .outputOptions([
+          "-vf", "fps=1,scale=640:-2",
+          "-q:v", "4"
+        ])
+        .output(path.join(frameDir, "frame-%03d.jpg"))
         .on("end", resolve)
         .on("error", reject)
-        .screenshots({
-          count: 3,
-          folder: frameDir,
-          filename: "frame-%i.jpg",
-          size: "640x?"
-        });
+        .run();
     });
 
     const frameFiles = fs.readdirSync(frameDir)
       .filter(name => name.endsWith(".jpg"))
-      .sort((a, b) =>
-        a.localeCompare(b, undefined, { numeric: true })
-      );
+      .sort();
 
     if (!frameFiles.length) {
       throw new Error("No video frames extracted.");
     }
-
-    const imageContent = frameFiles.map((name, i) => {
-      const imagePath = path.join(frameDir, name);
-      const base64 = fs.readFileSync(imagePath).toString("base64");
-
-      return [
-        {
-          type: "text",
-          text: `Video frame ${i + 1}`
-        },
-        {
-          type: "image_url",
-          image_url: {
-            url: `data:image/jpeg;base64,${base64}`
-          }
-        }
-      ];
-    }).flat();
 
     const groq = new OpenAI({
       apiKey: process.env.GROQ_API_KEY,
       baseURL: "https://api.groq.com/openai/v1"
     });
 
-    const response = await groq.chat.completions.create({
-      model: "qwen/qwen3.8-27b",
-      temperature: 0.3,
-      max_completion_tokens: 3000,
+    const observations = [];
+
+    for (let i = 0; i < frameFiles.length; i += 3) {
+      const batch = frameFiles.slice(i, i + 3);
+
+      const imageContent = batch.flatMap((name, index) => {
+        const frameNumber = i + index;
+        const imagePath = path.join(frameDir, name);
+        const base64 = fs.readFileSync(imagePath).toString("base64");
+
+        return [
+          {
+            type: "text",
+            text: `Timestamp: ${frameNumber} seconds`
+          },
+          {
+            type: "image_url",
+            image_url: {
+              url: `data:image/jpeg;base64,${base64}`
+            }
+          }
+        ];
+      });
+
+      const response = await groq.chat.completions.create({
+        model: "qwen/qwen3.8-27b",
+        temperature: 0.2,
+        max_completion_tokens: 2000,
+        messages: [
+          {
+            role: "system",
+            content: `You are an expert visual video analyst.
+
+Analyze each supplied frame separately and in chronological order.
+
+Do not invent actions between frames.
+Describe only what is actually visible.
+Clearly state when a movement or detail cannot be confirmed.
+
+For EACH frame provide:
+1. Exact timestamp.
+2. Main subject and visible objects.
+3. Actual visible action or pose.
+4. Ingredients, tools or products visible.
+5. Camera angle and framing.
+6. Camera movement only if it can be established.
+7. Lighting, background and composition.
+8. Visible changes compared with the previous frame.
+
+Write in detailed natural American English.`
+          },
+          {
+            role: "user",
+            content: [
+              { type: "text", text: "Analyze these frames in order:" },
+              ...imageContent
+            ]
+          }
+        ]
+      });
+
+      observations.push(response.choices[0]?.message?.content || "");
+    }
+
+    const combined = await groq.chat.completions.create({
+      model: "openai/gpt-oss-120b",
+      temperature: 0.2,
+      max_completion_tokens: 5000,
       messages: [
         {
           role: "system",
-          content: `You are an expert visual video analyst.
+          content: `You are a professional video reverse-engineering analyst.
 
-Analyze only what is visible in the supplied frames.
-Do not invent actions or objects.
-The frames are samples, not the complete video.
+Combine the supplied timestamped visual observations into one complete chronological report.
 
-Write in natural American English.
+Do not invent missing frames, dialogue, actions or results.
+Preserve timestamps.
+Do not claim continuous movement when only sampled frames are available.
 
 Use this exact structure:
 
-1. OPENING VISUAL
-Describe what appears in the opening sample.
-
-2. ACTIONS AND MOVEMENTS
-Describe visible actions in sequence.
-
-3. OBJECTS AND INGREDIENTS
-List visible objects, products, tools and ingredients.
-
-4. SCENE-BY-SCENE BREAKDOWN
-Describe each sampled frame in order.
-
-5. CAMERA ANGLES
-Identify close-up, wide shot, overhead, POV,
-eye-level or other visible framing.
-
+1. VIDEO OVERVIEW
+2. COMPLETE TIMESTAMPED VISUAL BREAKDOWN
+3. ACTIONS AND DEMONSTRATIONS IN ORDER
+4. OBJECTS, PRODUCTS AND INGREDIENTS
+5. CAMERA ANGLES AND COMPOSITION
 6. CAMERA MOVEMENTS
-Identify zoom, pan, tilt or tracking only
-when supported by the samples.
+7. LIGHTING AND VISUAL STYLE
+8. SCENE TRANSITIONS AND CONTINUITY
+9. OPENING HOOK AND ATTENTION-GRABBING MOMENTS
+10. FINAL RESULT AND ENDING
+11. DETAILS THAT CANNOT BE CONFIRMED
+12. OPPORTUNITIES TO CREATE A STRONGER ORIGINAL VIDEO
 
-7. VISUAL STYLE AND LIGHTING
-Describe lighting, background and composition.
-
-8. VIDEO SUMMARY
-Summarize what the visuals actually show.
-
-9. CONTENT GAPS
-Identify details that cannot be confirmed
-from the sampled frames.`
+Write in natural American English.
+Make the report detailed and useful for recreating an original competing video.`
         },
         {
           role: "user",
-          content: [
-            {
-              type: "text",
-              text: "Analyze these video frames in order:"
-            },
-            ...imageContent
-          ]
+          content: observations.join("\n\n--- NEXT FRAME BATCH ---\n\n")
         }
       ]
     });
 
     res.json({
-      analysis: response.choices[0]?.message?.content ||
-        "No visual analysis generated.",
-      framesAnalyzed: frameFiles.length
+      analysis: combined.choices[0]?.message?.content || "No visual analysis generated.",
+      framesAnalyzed: frameFiles.length,
+      duration
     });
 
   } catch (err) {
     console.error("Visual analysis error:", err);
-
     res.status(500).json({
       error: err.message || "Visual analysis failed."
     });
-
   } finally {
     fs.unlink(uploaded.path, () => {});
     fs.rm(frameDir, { recursive: true, force: true }, () => {});
   }
 });
-
 app.post("/api/analyze-niche", async (req, res) => {
   try {
     const { transcript } = req.body;
