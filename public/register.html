@@ -1,0 +1,112 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KY JACE | Client Registration</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 25px 16px;
+      background: #090f20;
+      color: white;
+      font-family: Arial, sans-serif;
+    }
+    .container {
+      max-width: 430px;
+      margin: 45px auto;
+    }
+    .card {
+      background: #151d33;
+      border: 1px solid #293653;
+      border-radius: 16px;
+      padding: 24px;
+    }
+    h2 { margin-top: 0; }
+    p { color: #aab7d0; font-size: 14px; }
+    input {
+      width: 100%;
+      padding: 14px;
+      margin: 8px 0;
+      border-radius: 8px;
+      border: 1px solid #34415e;
+      background: #0d1528;
+      color: white;
+      font-size: 15px;
+    }
+    button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 12px;
+      border: 0;
+      border-radius: 8px;
+      background: #536dfe;
+      color: white;
+      font-weight: bold;
+    }
+    #message {
+      margin-top: 15px;
+      line-height: 1.5;
+    }
+    a { color: #8ca1ff; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h2>KY JACE | Create Account</h2>
+      <p>Register to access AI Video Studio. Your account requires admin approval.</p>
+
+      <form id="registerForm">
+        <input id="name" type="text" placeholder="Full name" required>
+        <input id="email" type="email" placeholder="Email address" required>
+        <input id="password" type="password" placeholder="Password (8 characters minimum)" minlength="8" required>
+        <button type="submit" id="submitBtn">CREATE ACCOUNT</button>
+      </form>
+
+      <p id="message"></p>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById("registerForm");
+    const message = document.getElementById("message");
+    const button = document.getElementById("submitBtn");
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      button.disabled = true;
+      button.textContent = "PLEASE WAIT...";
+      message.textContent = "";
+
+      try {
+        const response = await fetch("/api/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: document.getElementById("name").value.trim(),
+            email: document.getElementById("email").value.trim(),
+            password: document.getElementById("password").value
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Registration failed.");
+        }
+
+        message.textContent = "Registration successful! Please wait for admin approval.";
+        form.reset();
+      } catch (error) {
+        message.textContent = error.message;
+      } finally {
+        button.disabled = false;
+        button.textContent = "CREATE ACCOUNT";
+      }
+    });
+  </script>
+</body>
+</html>
