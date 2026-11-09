@@ -100,25 +100,25 @@
     🎬 OPEN STORY STUDIO
   </a>
 
- 
-<section class="feature-card story-card" id="analyze-story">
-  <div class="feature-icon">📄</div>
-  <div class="feature-copy">
-    <h2>Analyze Story</h2>
-    <p>Get a detailed story and scene breakdown from your transcript.</p>
-  </div>
-  <button id="analyzeStoryBtn" class="feature-action" type="button">
-    Analyze Story ›
-  </button>
-  <p id="analysisStatus" role="status"></p>
-  <pre id="analysisResult"></pre>
-  <button type="button" onclick="copyAnalysis('analysisResult')">
-    📋 COPY STORY ANALYSIS
-  </button>
-</section>
+  <section class="feature-card story-card">
+    <div class="feature-icon">📄</div>
+    <div class="feature-copy">
+      <h2>Analyze Story</h2>
+      <p>Get a detailed story and scene breakdown from your transcript.</p>
+    </div>
+    <button id="analyzeStoryBtn" class="feature-action" type="button">
+      Analyze Story ›
+    </button>
+    <div class="feature-output">
+      <p id="analysisStatus" role="status"></p>
+      <pre id="analysisResult"></pre>
+      <button type="button" onclick="copyAnalysis('analysisResult')">
+        📋 COPY STORY ANALYSIS
+      </button>
+    </div>
+  </section>
 
-
-  <section class="feature-card niche-card" id="analyze-niche">
+  <section class="feature-card niche-card">
     <div class="feature-icon">🔎</div>
     <div class="feature-copy">
       <h2>Analyze Any Niche</h2>
@@ -127,24 +127,38 @@
     <button id="analyzeNicheBtn" class="feature-action" type="button">
       Explore Content ›
     </button>
-    <p id="nicheStatus"></p>
-    <pre id="nicheResult"></pre>
-    <button type="button" onclick="copyAnalysis('nicheResult')">📋 COPY NICHE ANALYSIS</button>
+    <div class="feature-output">
+      <p id="nicheStatus" role="status"></p>
+      <pre id="nicheResult"></pre>
+      <button type="button" onclick="copyAnalysis('nicheResult')">
+        📋 COPY NICHE ANALYSIS
+      </button>
+    </div>
   </section>
 
-  <section class="feature-card visual-card" id="visual-analyzer">
+  <section class="feature-card visual-card">
     <div class="feature-icon">🎥</div>
     <div class="feature-copy">
       <h2>Video Visual Analyzer</h2>
       <p>Analyze video shots, actions, objects, ingredients, camera angles and visual details.</p>
     </div>
-    <input type="file" id="visualVideoInput" accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.webm">
-    <button id="visualAnalyzeBtn" class="feature-action" type="button">
-      Analyze Visuals ›
-    </button>
-    <p id="visualStatus" role="status"></p>
-    <pre id="visualResult"></pre>
-    <button type="button" onclick="copyAnalysis('visualResult')">📋 COPY VISUAL ANALYSIS</button>
+    <div class="visual-controls">
+      <input
+        type="file"
+        id="visualVideoInput"
+        accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.webm"
+      >
+      <button id="visualAnalyzeBtn" class="feature-action" type="button">
+        Analyze Visuals ›
+      </button>
+    </div>
+    <div class="feature-output">
+      <p id="visualStatus" role="status"></p>
+      <pre id="visualResult"></pre>
+      <button type="button" onclick="copyAnalysis('visualResult')">
+        📋 COPY VISUAL ANALYSIS
+      </button>
+    </div>
   </section>
 
 </section>
