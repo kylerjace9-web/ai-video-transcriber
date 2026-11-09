@@ -195,6 +195,40 @@ app.post("/api/login", async (req, res) => {
     });
   }
 });
+// CHECK CURRENT USER
+app.get("/api/me", (req, res) => {
+  if (!req.session.user) {
+    return res.status(401).json({
+      authenticated: false
+    });
+  }
+
+  res.json({
+    authenticated: true,
+    user: req.session.user
+  });
+});
+
+// USER LOGOUT
+app.post("/api/logout", (req, res) => {
+  req.session.destroy(err => {
+    if (err) {
+      return res.status(500).json({
+        error: "Logout failed."
+      });
+    }
+
+    res.clearCookie("connect.sid", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax"
+    });
+
+    res.json({
+      message: "Logged out successfully."
+    });
+  });
+});
 app.get("/api/health", (_req, res) => {
   res.json({ ok: true, apiKeyConfigured: Boolean(process.env.GROQ_API_KEY) });
 });
