@@ -26,6 +26,30 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 
 app.use(express.json());
+const PgSession = connectPgSimple(session);
+
+app.set("trust proxy", 1);
+
+if (!process.env.SESSION_SECRET) {
+  throw new Error("Missing SESSION_SECRET environment variable.");
+}
+
+app.use(session({
+  store: new PgSession({
+    pool,
+    tableName: "user_sessions",
+    createTableIfMissing: true
+  }),
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    secure: true,
+    sameSite: "lax",
+    maxAge: 7 * 24 * 60 * 60 * 1000
+  }
+}));
 const PORT = process.env.PORT || 3000;
 const MAX_MB = Number(process.env.MAX_UPLOAD_MB || 100);
 
