@@ -100,14 +100,23 @@
     🎬 OPEN STORY STUDIO
   </a>
 
-  <a href="#analyze-story" class="feature-card story-card">
-    <div class="feature-icon">📄</div>
-    <div class="feature-copy">
-      <h2>Analyze Story</h2>
-      <p>Transcribe your video and get a detailed story and scene breakdown.</p>
-    </div>
-    <span class="feature-action">Analyze Story ›</span>
-  </a>
+ 
+<section class="feature-card story-card" id="analyze-story">
+  <div class="feature-icon">📄</div>
+  <div class="feature-copy">
+    <h2>Analyze Story</h2>
+    <p>Get a detailed story and scene breakdown from your transcript.</p>
+  </div>
+  <button id="analyzeStoryBtn" class="feature-action" type="button">
+    Analyze Story ›
+  </button>
+  <p id="analysisStatus" role="status"></p>
+  <pre id="analysisResult"></pre>
+  <button type="button" onclick="copyAnalysis('analysisResult')">
+    📋 COPY STORY ANALYSIS
+  </button>
+</section>
+
 
   <section class="feature-card niche-card" id="analyze-niche">
     <div class="feature-icon">🔎</div>
@@ -140,19 +149,7 @@
 
 </section>
 
-<section class="feature-card story-card" id="analyze-story">
-  <div class="feature-icon">📄</div>
-  <div class="feature-copy">
-    <h2>Analyze Story</h2>
-    <p>Get a scene-by-scene story breakdown from your transcript.</p>
-  </div>
-  <button id="analyzeStoryBtn" class="feature-action" type="button">
-    Analyze Story ›
-  </button>
-  <p id="analysisStatus" role="status"></p>
-  <pre id="analysisResult"></pre>
-  <button type="button" onclick="copyAnalysis('analysisResult')">📋 COPY STORY ANALYSIS</button>
-</section>
+
 
 <script>
  document.getElementById("visualAnalyzeBtn").addEventListener("click", async function () {
