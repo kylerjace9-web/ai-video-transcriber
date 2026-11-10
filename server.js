@@ -488,7 +488,7 @@ app.post("/api/analyze-video", requireAuth, upload.single("media"), async (req, 
           body: JSON.stringify({
             contents: [{ role: "user", parts }],
             generationConfig: {
-              temperature: 0.2,
+              
               maxOutputTokens: maxTokens
             }
           })
