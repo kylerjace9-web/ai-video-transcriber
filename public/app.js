@@ -30,3 +30,20 @@ $("exportTxt").addEventListener("click",()=>download("transcript.txt",segments.m
 $("exportSrt").addEventListener("click",()=>download("subtitles.srt",makeSrt(),"text/plain;charset=utf-8"));
 $("exportVtt").addEventListener("click",()=>download("subtitles.vtt",makeVtt(),"text/vtt;charset=utf-8"));
 $("newFileBtn").addEventListener("click",()=>{selectedFile=null;fileInput.value="";segments=[];scenes=[];$("workspace").hidden=true;$("fileInfo").textContent="No file selected";transcribeBtn.disabled=true;$("progressWrap").hidden=true;$("errorMsg").textContent="";if(mediaUrl)URL.revokeObjectURL(mediaUrl);mediaUrl=null;});
+document.getElementById("logoutLink")?.addEventListener("click", async (event) => {
+  event.preventDefault();
+
+  try {
+    const response = await fetch("/api/logout", {
+      method: "POST"
+    });
+
+    if (!response.ok) {
+      throw new Error("Logout failed.");
+    }
+
+    window.location.href = "/login.html";
+  } catch (error) {
+    alert("Hindi nakapag-logout. Pakisubukan ulit.");
+  }
+});
