@@ -241,6 +241,13 @@ const upload = multer({
 });
 
 fs.mkdirSync(path.join(path.dirname(fileURLToPath(import.meta.url)), "tmp"), { recursive: true });
+app.get(["/", "/index.html", "/story-studio.html"], (req, res, next) => {
+  if (!req.session.user) {
+    return res.redirect("/login.html");
+  }
+
+  next();
+});
 app.use(express.static(path.join(path.dirname(fileURLToPath(import.meta.url)), "public")));
 
 // CLIENT REGISTRATION
