@@ -509,8 +509,8 @@ app.post("/api/analyze-video", requireAuth, upload.single("media"), async (req, 
 
       const observations = [];
 
-      for (let i = 0; i < frameFiles.length; i += 3) {
-        const batch = frameFiles.slice(i, i + 3);
+      for (let i = 0; i < frameFiles.length; i += 10) {
+        const batch = frameFiles.slice(i, i + 10);
 
         const imageContent = batch.flatMap((name, index) => {
           const frameNumber = i + index + 1;
